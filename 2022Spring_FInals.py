@@ -112,12 +112,124 @@ class ground_traffic_decider:
         self.ground_traffic_counter += 1
         return self.temp_ground_traffic
 
+def calculate_dist_affected_due_weather(weather_1, weather_2, separation):
+    if weather_1 == weather_2:
+        return separation
+    elif weather_1 == 'cat_1':
+        if weather_2 == 'cat_2':
+            return separation + 0.5
+        else:
+            return separation + 1.5
+    elif weather_1 == 'cat_2':
+        if weather_2 == 'cat_1':
+            return separation - 0.5
+        else:
+            return separation + 1
+    else:
+        if weather_2 == 'cat_1':
+            return separation - 1.5
+        else:
+            return separation - 1
+
+def calculate_dist_affected_due_wind(wind_1, wind_2, separation):
+    if wind_1 == wind_2:
+        return separation
+    elif wind_1 == 'headwind':
+        if wind_2 == 'tailwind':
+            return separation - 0.2
+        elif wind_2 == 'crosswind':
+            return separation - 0.4
+        else:
+            return separation - 0.6
+    elif wind_1 == 'tailwind':
+        if wind_2 == 'headwind':
+            return separation + 0.2
+        elif wind_2 == 'crosswind':
+            return separation - 0.2
+        else:
+            return separation - 0.4
+    elif wind_1 == 'crosswind':
+        if wind_2 == 'headwind':
+            return separation + 0.4
+        elif wind_2 == 'tailwind':
+            return separation + 0.2
+        else:
+            return separation - 0.2
+    else:
+        if wind_2 == 'headwind':
+            return separation + 0.6
+        elif wind_2 == 'tailwind':
+            return separation + 0.4
+        else:
+            return separation + 0.2
+
+def calculate_dist_affected_due_aircraft_weight_class(aircraft_weight_class_1, aircraft_weight_class_2, separation):
+    if aircraft_weight_class_1 == aircraft_weight_class_2:
+        return separation
+    elif aircraft_weight_class_1 == 'light':
+        if aircraft_weight_class_2 == 'medium':
+            return separation - 1.8
+        elif aircraft_weight_class_2 == 'heavy':
+            return separation - 1.9
+        else:
+            return separation - 2
+    elif aircraft_weight_class_1 == 'medium':
+        if aircraft_weight_class_2 == 'light':
+            return separation + 0.4
+        elif aircraft_weight_class_2 == 'heavy':
+            return separation - 1.8
+        else:
+            return separation - 2
+    elif aircraft_weight_class_1 == 'heavy':
+        if aircraft_weight_class_2 == 'light':
+            return separation + 1.5
+        elif aircraft_weight_class_2 == 'medium':
+            return separation + 0.4
+        else:
+            return separation - 1.8
+    else:
+        if aircraft_weight_class_2 == 'light':
+            return separation + 3
+        elif aircraft_weight_class_2 == 'medium':
+            return separation + 2
+        else:
+            return separation + 1.5
+
+def calculate_dist_affected_due_ground_traffic(ground_traffic_1, ground_traffic_2, separation):
+    if ground_traffic_1 == ground_traffic_2:
+        return separation
+    elif ground_traffic_1 == 'low':
+        if ground_traffic_2 == 'average':
+            return separation + 0.2
+        else:
+            return separation + 0.4
+    elif ground_traffic_1 == 'average':
+        if ground_traffic_2 == 'low':
+            return separation - 0.2
+        else:
+            return separation + 0.2
+    else:
+        if ground_traffic_2 == 'low':
+            return separation - 0.4
+        else:
+            return separation - 0.2
+
+def calculate_dist_affected_due_air_traffic_congestion(air_traffic_congestion_1, air_traffic_congestion_2, separation):
+    if air_traffic_congestion_1 == air_traffic_congestion_2:
+        return separation
+    elif air_traffic_congestion_1 == 'regular':
+        return separation + 0.3
+    else:
+        return separation - 0.3
+
+
 if __name__ == '__main__':
     airplane_objects_dict = {}
     weather_decider = weather_decider()
     wind_decider = wind_decider()
     weight_decider = weight_decider()
     ground_traffic_decider = ground_traffic_decider()
+    distance_list = []
 
     # 5 NM is the recommended separation minima according to ICAO
     separation_minima = 5
@@ -134,4 +246,14 @@ if __name__ == '__main__':
             distance_affected_due_weather = calculate_dist_affected_due_weather(a['weather'], b['weather'], separation_minima)
             distance_affected_due_wind = calculate_dist_affected_due_wind(a['wind'], b['wind'], distance_affected_due_weather)
             distance_affected_due_aircraft_weight_class = calculate_dist_affected_due_aircraft_weight_class\
-                (a['aircraft_weight_class'], b['aircraft_weight_class'], distance_affected_due_weather)
+                (a['aircraft_weight_class'], b['aircraft_weight_class'], distance_affected_due_wind)
+            distance_affected_due_ground_traffic = calculate_dist_affected_due_ground_traffic\
+                (a['ground_traffic'], b['ground_traffic'], distance_affected_due_aircraft_weight_class)
+            distance_affected_due_air_traffic_congestion = calculate_dist_affected_due_air_traffic_congestion\
+                (a['air_traffic_congestion'], b['air_traffic_congestion'], distance_affected_due_ground_traffic)
+            temp_optimized_separation_minima = distance_affected_due_air_traffic_congestion
+
+            distance_list.append(temp_optimized_separation_minima)
+
+    optimized_separation_minima = sum(distance_list)/len(distance_list)
+    print(round(optimized_separation_minima, 3))
