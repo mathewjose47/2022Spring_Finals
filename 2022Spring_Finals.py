@@ -3,7 +3,7 @@ import random
 
 class airplane_attributes:
 
-    def __init__(self, weather_decider, wind_decider, weight_decider, ground_traffic_decider):
+    def __init__(self, weather_decider, wind_decider, weight_decider, ground_traffic_decider, hypotheis_type):
         """
         weather: In aviation, weather at airports is categorised based on the Runway Visibility Range (RVR), or in
                  simple terms, the distance of runway from the runway threshold - which is visible with the naked eye.
@@ -42,9 +42,11 @@ class airplane_attributes:
 
 
         """
-        # weather either changes or remains same for every 100 planes
-        self.weather = weather_decider.get_weather()
-
+        if hypotheis_type == "hyp_1":
+            # weather either changes or remains same for every 100 planes
+            self.weather = weather_decider.get_weather()
+        else:
+            self.weather = "cat_3"
         # wind either changes or remains same for every 10 planes. Determined by weighted probability for each wind type
         # highest probability is given to headwind and tailwind
         self.wind = wind_decider.get_wind()
@@ -61,6 +63,7 @@ class airplane_attributes:
         if self.ground_traffic == 'average' or self.ground_traffic == 'low':
             self.air_traffic_congestion = 'regular'
 
+
 class weather_decider:
 
     def __init__(self):
@@ -68,6 +71,9 @@ class weather_decider:
         self.weather_counter = 0
 
     def get_weather(self):
+        """
+            Method to randomize weather category for the MC simulation after every 100 flights
+        """
         if self.weather_counter % 100 == 0:
             self.temp_weather = random.choice(['cat_1', 'cat_2', 'cat_3'])
 
@@ -82,8 +88,12 @@ class wind_decider:
         self.wind_counter = 0
 
     def get_wind(self):
+        """
+            Method to randomize wind category for the MC simulation after every 10 flights. The randomized choices have
+            been assigned weights.
+        """
         if self.wind_counter % 10 == 0:
-            self.temp_wind = random.choices(['headwind', 'tailwind', 'crosswind', 'wind_shear'], weights=(45, 45, 5, 5), k=1)
+            self.temp_wind = random.choices(['headwind', 'tailwind', 'crosswind', 'wind_shear'], weights=(80, 10, 5, 5), k=1)
 
         self.wind_counter += 1
         return self.temp_wind[0]
@@ -94,6 +104,10 @@ class weight_decider:
         self.temp_weight = []
 
     def get_weight(self):
+        """
+            Method to randomize weight category values for the MC simulation. The randomized choices have
+            been assigned weights.
+        """
         # https://pynative.com/python-weighted-random-choices-with-probability/
         self.temp_weight = random.choices(['light', 'medium', 'heavy', 'super'], weights=(5, 60, 30, 5), k=1)
 
@@ -106,13 +120,33 @@ class ground_traffic_decider:
         self.ground_traffic_counter = 0
 
     def get_ground_traffic(self):
+        """
+        Method to randomize ground traffic type values for the MC simulation after every 20 flights.
+        """
         if self.ground_traffic_counter % 20 == 0:
             self.temp_ground_traffic = random.choice(['low', 'average', 'high'])
 
         self.ground_traffic_counter += 1
         return self.temp_ground_traffic
 
-def calculate_dist_affected_due_weather(weather_1, weather_2, separation):
+def calculate_dist_affected_due_weather(weather_1: str, weather_2: str, separation: float) -> float:
+    """
+        Calculates change in separation minima (in NM) for current and next flight in queue depending
+        on weather type:
+            1. same category - no change
+            2. category 1 to category 2: +0.5
+            3. category 1 to category 3: +1.5
+            4. category 2 to category 1: -0.5
+            5. category 2 to category 3: +1
+            6. category 3 to category 1: -1.5
+            7. category 3 to category 2: -1
+        :param weather_1: weather type during current flight in queue
+        :param weather_2: weather type during next flight in queue
+        :param separation: default separation minima defined (5 NM)
+        :return: change in separation minima in NM
+        >>> calculate_dist_affected_due_weather('cat_1', 'cat_2', 5)
+        5.5
+    """
     if weather_1 == weather_2:
         return separation
     elif weather_1 == 'cat_1':
@@ -131,7 +165,45 @@ def calculate_dist_affected_due_weather(weather_1, weather_2, separation):
         else:
             return separation - 1
 
-def calculate_dist_affected_due_wind(wind_1, wind_2, separation):
+def calculate_dist_hyp_2(weather_1: str, weather_2: str, separation: float) -> float:
+    """
+        Calculates change in separation minima (in NM) for current and next flight in queue for hypothesis 2
+        where weather is of category 3 (worst) for all flights
+        :param weather_1: weather type during current flight in queue
+        :param weather_2: weather type during next flight in queue
+        :param separation: default separation minima defined (5 NM)
+        :return: change in separation minima in NM
+        >>> calculate_dist_hyp_2('cat_3, cat_3, 5)
+        6
+    """
+    if weather_1 == weather_2:
+        return separation + 1
+
+
+def calculate_dist_affected_due_wind(wind_1: str, wind_2: str, separation: float) -> float:
+    """
+        Calculates change in separation minima (in NM) for current and next flight in queue depending
+        on wind type:
+            1. same category - no change
+            2. headwind to tailwind: -0.2
+            3. headwind to crosswind: -0.4
+            4. headwind to wind shear: -0.6
+            5. tailwind to headwind: +0.2
+            6. tailwind to crosswind: -0.2
+            7. tailwind to wind shear: -0.4
+            8. crosswind to headwind: +0.4
+            9. crosswind to tailwind: +0.2
+            10. crosswind to wind shear: -0.2
+            11. wind shear to headwind: +0.6
+            12. wind shear to tailwind: +0.4
+            13. wind shear to crosswind: +0.2
+        :param wind_1: wind condition during current flight in queue
+        :param wind_2: wind condition during next flight in queue
+        :param separation: separation distance affected due to weather
+        :return: change in separation minima in NM
+        >>> calculate_dist_affected_due_wind('headwind', 'crosswind', 5.5)
+        5.1
+    """
     if wind_1 == wind_2:
         return separation
     elif wind_1 == 'headwind':
@@ -163,7 +235,30 @@ def calculate_dist_affected_due_wind(wind_1, wind_2, separation):
         else:
             return separation + 0.2
 
-def calculate_dist_affected_due_aircraft_weight_class(aircraft_weight_class_1, aircraft_weight_class_2, separation):
+def calculate_dist_affected_due_aircraft_weight_class(aircraft_weight_class_1: str, aircraft_weight_class_2: str, separation: float) -> float:
+    """
+        Calculates change in separation minima (in NM) for current and next flight in queue depending
+        on weight class:
+            1. same category - no change
+            2. light before medium: -1.8
+            3. light before heavy: -1.9
+            4. light before super: -2
+            5. medium before light: +0.4
+            6. medium before heavy: -1.8
+            7. medium before super: -2
+            8. heavy before light: +1.5
+            9. heavy before medium: +0.4
+            10. heavy before super: -1.8
+            11. super before light: +3
+            12. super before medium: +2
+            13. super before heavy: +1.5
+        :param aircraft_weight_class_1: weight class of current flight in queue
+        :param aircraft_weight_class_2: weight class of next flight in queue
+        :param separation: separation distance affected due to wind
+        :return: change in separation minima in NM
+        >>> calculate_dist_affected_due_aircraft_weight_class('heavy', 'super', 5.1)
+        3.3
+    """
     if aircraft_weight_class_1 == aircraft_weight_class_2:
         return separation
     elif aircraft_weight_class_1 == 'light':
@@ -195,7 +290,24 @@ def calculate_dist_affected_due_aircraft_weight_class(aircraft_weight_class_1, a
         else:
             return separation + 1.5
 
-def calculate_dist_affected_due_ground_traffic(ground_traffic_1, ground_traffic_2, separation):
+def calculate_dist_affected_due_ground_traffic(ground_traffic_1: str, ground_traffic_2: str, separation: float) -> float:
+    """
+        Calculates change in separation minima (in NM) for current and next flight in queue depending
+        on ground traffic:
+            1. same category - no change
+            2. low to average: +0.2
+            3. low to high: +0.4
+            4. average to low: -0.2
+            5. average to high: +0.2
+            6. high to low: -0.4
+            7. high to average: -0.2
+        :param ground_traffic_1: ground traffic during current flight in queue
+        :param ground_traffic_2: ground traffic during next flight in queue
+        :param separation: separation distance affected due to weight class
+        :return: change in separation minima in NM
+        >>> calculate_dist_affected_due_ground_traffic('average', 'high', 3.3)
+        3.5
+    """
     if ground_traffic_1 == ground_traffic_2:
         return separation
     elif ground_traffic_1 == 'low':
@@ -214,7 +326,20 @@ def calculate_dist_affected_due_ground_traffic(ground_traffic_1, ground_traffic_
         else:
             return separation - 0.2
 
-def calculate_dist_affected_due_air_traffic_congestion(air_traffic_congestion_1, air_traffic_congestion_2, separation):
+def calculate_dist_affected_due_air_traffic_congestion(air_traffic_congestion_1: str, air_traffic_congestion_2: str, separation: float) -> float:
+    """
+        Calculates change in separation minima (in NM) for current and next flight in queue depending
+        on air traffic congestion:
+            1. same category - no change
+            2. regular to max: +0.3
+            3. max to regular: -0.3
+        :param air_traffic_congestion_1: air traffic congestion during current flight in queue
+        :param air_traffic_congestion_2: air traffic congestion during next flight in queue
+        :param separation: separation distance affected due to ground traffic
+        :return: final change in separation minima in NM
+        >>> calculate_dist_affected_due_air_traffic_congestion('max', 'regular', 3.5)
+        3.2
+    """
     if air_traffic_congestion_1 == air_traffic_congestion_2:
         return separation
     elif air_traffic_congestion_1 == 'regular':
@@ -229,7 +354,8 @@ if __name__ == '__main__':
     wind_decider = wind_decider()
     weight_decider = weight_decider()
     ground_traffic_decider = ground_traffic_decider()
-    distance_list = []
+    distance_list_hyp1 = []
+    distance_list_hyp2 = []
 
     # 5 NM is the recommended separation minima according to ICAO
     separation_minima = 5
@@ -237,7 +363,7 @@ if __name__ == '__main__':
     # https://stackoverflow.com/questions/21598872/how-to-create-multiple-class-objects-with-a-loop-in-python
     for i in range(1, 10001):
         name = 'airplane_{}'.format(i)
-        airplane_objects_dict[name] = airplane_attributes(weather_decider, wind_decider, weight_decider, ground_traffic_decider)
+        airplane_objects_dict[name] = airplane_attributes(weather_decider, wind_decider, weight_decider, ground_traffic_decider, "hyp_1")
         if i > 1:
             airplane_name_1 = 'airplane_{}'.format(i - 1)
             airplane_name_2 = 'airplane_{}'.format(i)
@@ -253,13 +379,34 @@ if __name__ == '__main__':
                 (a['air_traffic_congestion'], b['air_traffic_congestion'], distance_affected_due_ground_traffic)
             temp_optimized_separation_minima = distance_affected_due_air_traffic_congestion
 
-            distance_list.append(temp_optimized_separation_minima)
+            distance_list_hyp1.append(temp_optimized_separation_minima)
 
-    optimized_separation_minima = sum(distance_list)/len(distance_list)
-    print(round(optimized_separation_minima, 3))
-
-
-
+    optimized_separation_minima_hyp1 = sum(distance_list_hyp1)/len(distance_list_hyp1)
+    output_hyp1 = round(optimized_separation_minima_hyp1, 3)
+    print("The final calculated separation minima for hypothesis 1 is {}".format(output_hyp1))
 
 
+    # Testing Hypothesis 2:
+    for i in range(1, 10001):
+     name = 'airplane_{}'.format(i)
+     airplane_objects_dict[name] = airplane_attributes(weather_decider, wind_decider, weight_decider, ground_traffic_decider, "hyp_2")
+     if i > 1:
+         airplane_name_1 = 'airplane_{}'.format(i - 1)
+         airplane_name_2 = 'airplane_{}'.format(i)
+         a = airplane_objects_dict[airplane_name_1].__dict__
+         b = airplane_objects_dict[airplane_name_2].__dict__
+         distance_affected_due_weather = calculate_dist_hyp_2(a['weather'], b['weather'], separation_minima)
+         distance_affected_due_wind = calculate_dist_affected_due_wind(a['wind'], b['wind'], distance_affected_due_weather)
+         distance_affected_due_aircraft_weight_class = calculate_dist_affected_due_aircraft_weight_class\
+             (a['aircraft_weight_class'], b['aircraft_weight_class'], distance_affected_due_wind)
+         distance_affected_due_ground_traffic = calculate_dist_affected_due_ground_traffic\
+             (a['ground_traffic'], b['ground_traffic'], distance_affected_due_aircraft_weight_class)
+         distance_affected_due_air_traffic_congestion = calculate_dist_affected_due_air_traffic_congestion\
+             (a['air_traffic_congestion'], b['air_traffic_congestion'], distance_affected_due_ground_traffic)
+         temp_optimized_separation_minima = distance_affected_due_air_traffic_congestion
 
+         distance_list_hyp2.append(temp_optimized_separation_minima)
+
+    optimized_separation_minima_hyp2 = sum(distance_list_hyp2)/len(distance_list_hyp2)
+    output_hyp2 = round(optimized_separation_minima_hyp2, 3)
+    print("\nThe final calculated separation minima for hypothesis 2 is {}".format(output_hyp2))
