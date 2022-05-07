@@ -1,5 +1,6 @@
 import sys
 import random
+import pandas as pd
 
 class airplane_attributes:
 
@@ -84,7 +85,7 @@ class wind_decider:
 
     def __init__(self):
         # https://pynative.com/python-weighted-random-choices-with-probability/
-        self.temp_wind = random.choices(['headwind', 'tailwind', 'crosswind', 'wind_shear'], weights=(45, 45, 5, 5), k=1)
+        self.temp_wind = random.choices(['headwind', 'tailwind', 'crosswind', 'wind_shear'], weights=(80, 10, 5, 5), k=1)
         self.wind_counter = 0
 
     def get_wind(self):
@@ -360,6 +361,12 @@ if __name__ == '__main__':
     # 5 NM is the recommended separation minima according to ICAO
     separation_minima = 5
 
+    #creating dataframe to export simulation data
+    hyp1_header = ['weather1', 'weather2', 'wind1', 'wind2', 'aircraft_weight_class1', 'aircraft_weight_class2', 'ground_traffic1', 'ground_traffic2', 'air_traffic_congestion1', 'air_traffic_congestion2', 'caculated_minima']
+    df1 = pd.DataFrame(columns=hyp1_header)
+    df2 = pd.DataFrame(columns=hyp1_header)
+
+
     # https://stackoverflow.com/questions/21598872/how-to-create-multiple-class-objects-with-a-loop-in-python
     for i in range(1, 10001):
         name = 'airplane_{}'.format(i)
@@ -367,46 +374,59 @@ if __name__ == '__main__':
         if i > 1:
             airplane_name_1 = 'airplane_{}'.format(i - 1)
             airplane_name_2 = 'airplane_{}'.format(i)
-            a = airplane_objects_dict[airplane_name_1].__dict__
-            b = airplane_objects_dict[airplane_name_2].__dict__
-            distance_affected_due_weather = calculate_dist_affected_due_weather(a['weather'], b['weather'], separation_minima)
-            distance_affected_due_wind = calculate_dist_affected_due_wind(a['wind'], b['wind'], distance_affected_due_weather)
+            a1 = airplane_objects_dict[airplane_name_1].__dict__
+            b1 = airplane_objects_dict[airplane_name_2].__dict__
+            distance_affected_due_weather = calculate_dist_affected_due_weather(a1['weather'], b1['weather'], separation_minima)
+            distance_affected_due_wind = calculate_dist_affected_due_wind(a1['wind'], b1['wind'], distance_affected_due_weather)
             distance_affected_due_aircraft_weight_class = calculate_dist_affected_due_aircraft_weight_class\
-                (a['aircraft_weight_class'], b['aircraft_weight_class'], distance_affected_due_wind)
+                (a1['aircraft_weight_class'], b1['aircraft_weight_class'], distance_affected_due_wind)
             distance_affected_due_ground_traffic = calculate_dist_affected_due_ground_traffic\
-                (a['ground_traffic'], b['ground_traffic'], distance_affected_due_aircraft_weight_class)
+                (a1['ground_traffic'], b1['ground_traffic'], distance_affected_due_aircraft_weight_class)
             distance_affected_due_air_traffic_congestion = calculate_dist_affected_due_air_traffic_congestion\
-                (a['air_traffic_congestion'], b['air_traffic_congestion'], distance_affected_due_ground_traffic)
+                (a1['air_traffic_congestion'], b1['air_traffic_congestion'], distance_affected_due_ground_traffic)
             temp_optimized_separation_minima = distance_affected_due_air_traffic_congestion
 
+            to_append = [a1['weather'], b1['weather'], a1['wind'], b1['wind'], a1['aircraft_weight_class'], b1['aircraft_weight_class'],\
+                           a1['ground_traffic'], b1['ground_traffic'], a1['air_traffic_congestion'], b1['air_traffic_congestion'], distance_affected_due_ground_traffic]
+            a_series = pd.Series(to_append, index=df1.columns)
+            df1 = df1.append(a_series, ignore_index=True)
             distance_list_hyp1.append(temp_optimized_separation_minima)
 
+    # exporting to csv
+    df1.to_csv('hyp1.csv')
     optimized_separation_minima_hyp1 = sum(distance_list_hyp1)/len(distance_list_hyp1)
     output_hyp1 = round(optimized_separation_minima_hyp1, 3)
     print("The final calculated separation minima for hypothesis 1 is {}".format(output_hyp1))
 
 
-    # Testing Hypothesis 2:
+    # Testing Hypothesis-2:
     for i in range(1, 10001):
      name = 'airplane_{}'.format(i)
      airplane_objects_dict[name] = airplane_attributes(weather_decider, wind_decider, weight_decider, ground_traffic_decider, "hyp_2")
      if i > 1:
          airplane_name_1 = 'airplane_{}'.format(i - 1)
          airplane_name_2 = 'airplane_{}'.format(i)
-         a = airplane_objects_dict[airplane_name_1].__dict__
-         b = airplane_objects_dict[airplane_name_2].__dict__
-         distance_affected_due_weather = calculate_dist_hyp_2(a['weather'], b['weather'], separation_minima)
-         distance_affected_due_wind = calculate_dist_affected_due_wind(a['wind'], b['wind'], distance_affected_due_weather)
+         a2 = airplane_objects_dict[airplane_name_1].__dict__
+         b2 = airplane_objects_dict[airplane_name_2].__dict__
+         distance_affected_due_weather = calculate_dist_hyp_2(a2['weather'], b2['weather'], separation_minima)
+         distance_affected_due_wind = calculate_dist_affected_due_wind(a2['wind'], b2['wind'], distance_affected_due_weather)
          distance_affected_due_aircraft_weight_class = calculate_dist_affected_due_aircraft_weight_class\
-             (a['aircraft_weight_class'], b['aircraft_weight_class'], distance_affected_due_wind)
+             (a2['aircraft_weight_class'], b2['aircraft_weight_class'], distance_affected_due_wind)
          distance_affected_due_ground_traffic = calculate_dist_affected_due_ground_traffic\
-             (a['ground_traffic'], b['ground_traffic'], distance_affected_due_aircraft_weight_class)
+             (a2['ground_traffic'], b2['ground_traffic'], distance_affected_due_aircraft_weight_class)
          distance_affected_due_air_traffic_congestion = calculate_dist_affected_due_air_traffic_congestion\
-             (a['air_traffic_congestion'], b['air_traffic_congestion'], distance_affected_due_ground_traffic)
+             (a2['air_traffic_congestion'], b2['air_traffic_congestion'], distance_affected_due_ground_traffic)
          temp_optimized_separation_minima = distance_affected_due_air_traffic_congestion
+
+         to_append = [a2['weather'], b2['weather'], a2['wind'], b2['wind'], a2['aircraft_weight_class'], b2['aircraft_weight_class'], \
+                      a2['ground_traffic'], b2['ground_traffic'], a2['air_traffic_congestion'], b2['air_traffic_congestion'], distance_affected_due_ground_traffic]
+         a_series = pd.Series(to_append, index=df1.columns)
+         df2 = df2.append(a_series, ignore_index=True)
 
          distance_list_hyp2.append(temp_optimized_separation_minima)
 
+    # exporting to csv
+    df2.to_csv('hyp2.csv')
     optimized_separation_minima_hyp2 = sum(distance_list_hyp2)/len(distance_list_hyp2)
     output_hyp2 = round(optimized_separation_minima_hyp2, 3)
     print("\nThe final calculated separation minima for hypothesis 2 is {}".format(output_hyp2))
