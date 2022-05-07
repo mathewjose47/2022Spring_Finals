@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="8eebcd49-ca73-46d5-8049-c8229703b3b6" name="Changes" comment="Added doctests" />
+    <list default="true" id="8eebcd49-ca73-46d5-8049-c8229703b3b6" name="Changes" comment="Added functions for distance calculations" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -36,8 +36,6 @@
       <workItem from="1650963734335" duration="80000" />
       <workItem from="1651010304088" duration="185000" />
       <workItem from="1651021139785" duration="591000" />
-      <workItem from="1651021734798" duration="244000" />
-      <workItem from="1651908980884" duration="311000" />
     </task>
     <task id="LOCAL-00001" summary="Initial commit for airplane attributes">
       <created>1650963780835</created>
@@ -53,21 +51,7 @@
       <option name="project" value="LOCAL" />
       <updated>1651021594040</updated>
     </task>
-    <task id="LOCAL-00003" summary="Added functions for distance calculations">
-      <created>1651021746917</created>
-      <option name="number" value="00003" />
-      <option name="presentableId" value="LOCAL-00003" />
-      <option name="project" value="LOCAL" />
-      <updated>1651021746917</updated>
-    </task>
-    <task id="LOCAL-00004" summary="Added doctests">
-      <created>1651909158017</created>
-      <option name="number" value="00004" />
-      <option name="presentableId" value="LOCAL-00004" />
-      <option name="project" value="LOCAL" />
-      <updated>1651909158017</updated>
-    </task>
-    <option name="localTasksCounter" value="5" />
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -87,7 +71,6 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Initial commit for airplane attributes" />
     <MESSAGE value="Added functions for distance calculations" />
-    <MESSAGE value="Added doctests" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added doctests" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added functions for distance calculations" />
   </component>
 </project>
