@@ -16,7 +16,7 @@ to reduce the distance.
 If the optimum separation minima can be reduced further, it could be beneficial to the airline industry, thereby making the landing sequence
 faster and more efficient.
 
-![](C:\Users\ruchi\Desktop\PR FinalProject\landingseq.jpg)
+![](https://upload.wikimedia.org/wikipedia/commons/e/e0/A340-300_landing_sequence_%284342008531%29.jpg)
 
 ## Randomized Variables
 
