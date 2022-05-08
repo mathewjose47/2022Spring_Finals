@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="8eebcd49-ca73-46d5-8049-c8229703b3b6" name="Changes" comment="Added doctest and code for csv export">
-      <change afterPath="$PROJECT_DIR$/Hypothesis_1.ipynb" afterDir="false" />
+    <list default="true" id="8eebcd49-ca73-46d5-8049-c8229703b3b6" name="Changes" comment="adding jupyter notebook and data">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hyp1.csv" beforeDir="false" afterPath="$PROJECT_DIR$/hyp1.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hyp2.csv" beforeDir="false" afterPath="$PROJECT_DIR$/hyp2.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/2022Spring_Finals.py" beforeDir="false" afterPath="$PROJECT_DIR$/2022Spring_Finals.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -103,6 +102,7 @@
       <workItem from="1651021139785" duration="591000" />
       <workItem from="1651909373909" duration="179000" />
       <workItem from="1651952647732" duration="7475000" />
+      <workItem from="1651961556681" duration="6306000" />
     </task>
     <task id="LOCAL-00001" summary="Initial commit for airplane attributes">
       <created>1650963780835</created>
@@ -132,7 +132,14 @@
       <option name="project" value="LOCAL" />
       <updated>1651960456816</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="adding jupyter notebook and data">
+      <created>1651961600654</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1651961600654</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -154,7 +161,8 @@
     <MESSAGE value="Added functions for distance calculations" />
     <MESSAGE value="Added doctests" />
     <MESSAGE value="Added doctest and code for csv export" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added doctest and code for csv export" />
+    <MESSAGE value="adding jupyter notebook and data" />
+    <option name="LAST_COMMIT_MESSAGE" value="adding jupyter notebook and data" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -164,10 +172,15 @@
           <line>9</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="jupyter-line">
+          <url>notebook://C:/Users/ruchi/PycharmProjects/SpringFinalProject2/Hypothesis_1.ipynb</url>
+          <line>1</line>
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/SpringFinalProject2$2022Spring_Finals.coverage" NAME="2022Spring_Finals Coverage Results" MODIFIED="1651961434538" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/SpringFinalProject2$2022Spring_Finals.coverage" NAME="2022Spring_Finals Coverage Results" MODIFIED="1652039341007" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

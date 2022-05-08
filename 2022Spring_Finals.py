@@ -174,7 +174,7 @@ def calculate_dist_hyp_2(weather_1: str, weather_2: str, separation: float) -> f
         :param weather_2: weather type during next flight in queue
         :param separation: default separation minima defined (5 NM)
         :return: change in separation minima in NM
-        >>> calculate_dist_hyp_2('cat_3, cat_3, 5)
+        >>> calculate_dist_hyp_2('cat_3', 'cat_3', 5)
         6
     """
     if weather_1 == weather_2:
@@ -350,6 +350,11 @@ def calculate_dist_affected_due_air_traffic_congestion(air_traffic_congestion_1:
 
 
 if __name__ == '__main__':
+    import doctest
+    #import 2022Spring_Finals
+
+    print(doctest.testmod())
+
     airplane_objects_dict = {}
     weather_decider = weather_decider()
     wind_decider = wind_decider()
@@ -362,13 +367,13 @@ if __name__ == '__main__':
     separation_minima = 5
 
     #creating dataframe to export simulation data
-    hyp1_header = ['weather1', 'weather2', 'wind1', 'wind2', 'aircraft_weight_class1', 'aircraft_weight_class2', 'ground_traffic1', 'ground_traffic2', 'air_traffic_congestion1', 'air_traffic_congestion2', 'caculated_minima']
+    hyp1_header = ['weather1', 'weather2', 'wind1', 'wind2', 'aircraft_weight_class1', 'aircraft_weight_class2', 'ground_traffic1', 'ground_traffic2', 'air_traffic_congestion1', 'air_traffic_congestion2', 'calculated_minima']
     df1 = pd.DataFrame(columns=hyp1_header)
     df2 = pd.DataFrame(columns=hyp1_header)
 
 
     # https://stackoverflow.com/questions/21598872/how-to-create-multiple-class-objects-with-a-loop-in-python
-    for i in range(1, 10001):
+    for i in range(1, 1001):
         name = 'airplane_{}'.format(i)
         airplane_objects_dict[name] = airplane_attributes(weather_decider, wind_decider, weight_decider, ground_traffic_decider, "hyp_1")
         if i > 1:
@@ -393,14 +398,14 @@ if __name__ == '__main__':
             distance_list_hyp1.append(temp_optimized_separation_minima)
 
     # exporting to csv
-    df1.to_csv('hyp1.csv')
+    df1.to_csv('hyp1_small.csv')
     optimized_separation_minima_hyp1 = sum(distance_list_hyp1)/len(distance_list_hyp1)
     output_hyp1 = round(optimized_separation_minima_hyp1, 3)
     print("The final calculated separation minima for hypothesis 1 is {}".format(output_hyp1))
 
 
     # Testing Hypothesis-2:
-    for i in range(1, 10001):
+    for i in range(1, 1001):
      name = 'airplane_{}'.format(i)
      airplane_objects_dict[name] = airplane_attributes(weather_decider, wind_decider, weight_decider, ground_traffic_decider, "hyp_2")
      if i > 1:
@@ -426,7 +431,7 @@ if __name__ == '__main__':
          distance_list_hyp2.append(temp_optimized_separation_minima)
 
     # exporting to csv
-    df2.to_csv('hyp2.csv')
+    df2.to_csv('hyp2_small.csv')
     optimized_separation_minima_hyp2 = sum(distance_list_hyp2)/len(distance_list_hyp2)
     output_hyp2 = round(optimized_separation_minima_hyp2, 3)
     print("\nThe final calculated separation minima for hypothesis 2 is {}".format(output_hyp2))

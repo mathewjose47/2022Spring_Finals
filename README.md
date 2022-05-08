@@ -73,13 +73,17 @@ We randomized our selected variables in three ways:
   - Air Traffic Congestion - depends on Ground Traffic
 
 
-## Hypothesis
+## Hypothesis Results
 
 ### Hypothesis 1: The optimal separation between two aircraft in a landing sequence is less than 5 NM
 
-### Hypothesis 2: During prolonged worst weather conditions, the optimal separation is affected not more than 2 NM
+The average distance after running our simulations multiple times came out to be in the range of 4.5-4.8 NM.
+We therefore cannot reject this hypothesis. 
 
-## Conclusion
+### Hypothesis 2: During prolonged worst weather conditions, the optimal separation is affected not more than 2 NM
+The average distance after running our simulations multiple times came out to be in the range of 5.6 NM-5.7 NM. The difference 
+was observed to be less than 2NM in 75% of our observations.
+We therefore cannot reject this hypothesis.
 
 ## References
 
@@ -89,6 +93,10 @@ We randomized our selected variables in three ways:
 - https://www.southernwings.co.nz/the-effects-of-wind-on-aircraft/
 
 ## User Guide
+
+- Run "2022Spring_Finals.py" file.
+- If the user wants to check the data, the simulation data for hypothesis-1 is exported to 
+"hyp1.csv" file and for hypothesis-2 it is exported to "hyp2.csv" file.
 
 
 
