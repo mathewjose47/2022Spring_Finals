@@ -78,12 +78,18 @@ We randomized our selected variables in three ways:
 ### Hypothesis 1: The optimal separation between two aircraft in a landing sequence is less than 5 NM
 
 The average distance after running our simulations multiple times came out to be in the range of 4.5-4.8 NM.
-We therefore cannot reject this hypothesis. 
+We therefore cannot reject this hypothesis.
+
+<img width="242" alt="hyp1" src="https://user-images.githubusercontent.com/91963165/167313528-b668e654-5d87-4f6c-8d87-20626386c14a.png">
+
 
 ### Hypothesis 2: During prolonged worst weather conditions, the optimal separation is affected not more than 2 NM
 The average distance after running our simulations multiple times came out to be in the range of 5.6 NM-5.7 NM. The difference 
 was observed to be less than 2NM in 75% of our observations.
 We therefore cannot reject this hypothesis.
+
+<img width="236" alt="hyp2" src="https://user-images.githubusercontent.com/91963165/167313542-da5720f0-f842-43b8-b113-9fe69023f6da.png">
+
 
 ## References
 
