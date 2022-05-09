@@ -1,0 +1,923 @@
+Index: 2022Spring_Finals.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import sys\r\nimport random\r\nimport pandas as pd\r\n\r\nclass airplane_attributes:\r\n\r\n    def __init__(self, weather_decider, wind_decider, weight_decider, ground_traffic_decider, hypotheis_type):\r\n        \"\"\"\r\n        weather: In aviation, weather at airports is categorised based on the Runway Visibility Range (RVR), or in\r\n                 simple terms, the distance of runway from the runway threshold - which is visible with the naked eye.\r\n                 This is because, reduction in visibility is directly proportional to the deterioration in weather.\r\n                 Hence, the main 3 categories we will include is:\r\n                 cat_1: This is Category 1 where RVR is not less than 800 m\r\n                 cat_2: This is Category 2 where RVR is not less than 300 m\r\n                 cat_3: This is Category 3 where RVR is from 200 m to 0 m\r\n\r\n        https://www.southernwings.co.nz/the-effects-of-wind-on-aircraft/\r\n        wind: There are mainly four types of wind in aviation:\r\n                 headwind: A headwind is wind blowing directly towards the front of the aircraft. A headwind increases\r\n                           drag.\r\n                 tailwind: A tailwind is wind blowing directly towards the rear of the aircraft. A tailwind assists the\r\n                           aircraft’s propulsion systems.\r\n                 crosswind: Winds blowing in any other direction than a headwind or tailwind.\r\n                 wind_shear: A sudden change in headwind or tailwind causing rapid changes in lift to the aircraft also\r\n                             known as ‘Wind Shear’ is one of the worst wind effects to experience.\r\n\r\n        aircraft_weight_class: This is a significant randomized variable to consider due to the concept of\r\n                               Wake Turbulence. Wake turbulence is a disturbance in the atmosphere that forms behind an\r\n                               aircraft as it passes through the air. Heavier the aircraft, more is the wake turbulence.\r\n                               The different weight classes are based on Maximum Take-Off Mass (MTOM):\r\n                               light: MTOM < 7,000 kgs\r\n                               medium: 7,000 kgs < MTOM < 136,000 kgs\r\n                               heavy: MTOM >136,000 kgs\r\n                               super: Specific category for Airbus A380-800 and Antonov An-225\r\n\r\n        ground_traffic: This represents the aircraft traffic on taxiways. These planes would also be in a queue to get\r\n                        ready for takeoff. Higher the ground traffic, higher would be the air traffic congestion.\r\n                        The types of ground traffic assumed are low, average and high.\r\n\r\n        air_traffic_congestion: This variable would be dependent on ground_traffic. Our assumption is that if\r\n                                ground_traffic is high, air_traffic_congestion is also max. If ground_traffic is\r\n                                average or low, air_traffic_congestion is regular\r\n\r\n\r\n        \"\"\"\r\n        if hypotheis_type == \"hyp_1\":\r\n            # weather either changes or remains same for every 100 planes\r\n            self.weather = weather_decider.get_weather()\r\n        else:\r\n            self.weather = \"cat_3\"\r\n        # wind either changes or remains same for every 10 planes. Determined by weighted probability for each wind type\r\n        # highest probability is given to headwind and tailwind\r\n        self.wind = wind_decider.get_wind()\r\n\r\n        # determined by weighted probability for each weight class. Highest probability is given for medium aircraft\r\n        self.aircraft_weight_class = weight_decider.get_weight()\r\n\r\n        # ground_traffic either changes or remains same for every 20 planes\r\n        self.ground_traffic = ground_traffic_decider.get_ground_traffic()\r\n\r\n        # air_traffic_congestion is directly dependent on ground_traffic\r\n        if self.ground_traffic == 'high':\r\n            self.air_traffic_congestion = 'max'\r\n        if self.ground_traffic == 'average' or self.ground_traffic == 'low':\r\n            self.air_traffic_congestion = 'regular'\r\n\r\n\r\nclass weather_decider:\r\n\r\n    def __init__(self):\r\n        self.temp_weather = random.choice(['cat_1', 'cat_2', 'cat_3'])\r\n        self.weather_counter = 0\r\n\r\n    def get_weather(self):\r\n        \"\"\"\r\n            Method to randomize weather category for the MC simulation after every 100 flights\r\n        \"\"\"\r\n        if self.weather_counter % 100 == 0:\r\n            self.temp_weather = random.choice(['cat_1', 'cat_2', 'cat_3'])\r\n\r\n        self.weather_counter += 1\r\n        return self.temp_weather\r\n\r\nclass wind_decider:\r\n\r\n    def __init__(self):\r\n        # https://pynative.com/python-weighted-random-choices-with-probability/\r\n        self.temp_wind = random.choices(['headwind', 'tailwind', 'crosswind', 'wind_shear'], weights=(80, 10, 5, 5), k=1)\r\n        self.wind_counter = 0\r\n\r\n    def get_wind(self):\r\n        \"\"\"\r\n            Method to randomize wind category for the MC simulation after every 10 flights. The randomized choices have\r\n            been assigned weights.\r\n        \"\"\"\r\n        if self.wind_counter % 10 == 0:\r\n            self.temp_wind = random.choices(['headwind', 'tailwind', 'crosswind', 'wind_shear'], weights=(80, 10, 5, 5), k=1)\r\n\r\n        self.wind_counter += 1\r\n        return self.temp_wind[0]\r\n\r\nclass weight_decider:\r\n\r\n    def __init__(self):\r\n        self.temp_weight = []\r\n\r\n    def get_weight(self):\r\n        \"\"\"\r\n            Method to randomize weight category values for the MC simulation. The randomized choices have\r\n            been assigned weights.\r\n        \"\"\"\r\n        # https://pynative.com/python-weighted-random-choices-with-probability/\r\n        self.temp_weight = random.choices(['light', 'medium', 'heavy', 'super'], weights=(5, 60, 30, 5), k=1)\r\n\r\n        return self.temp_weight[0]\r\n\r\nclass ground_traffic_decider:\r\n\r\n    def __init__(self):\r\n        self.temp_ground_traffic = random.choice(['low', 'average', 'high'])\r\n        self.ground_traffic_counter = 0\r\n\r\n    def get_ground_traffic(self):\r\n        \"\"\"\r\n        Method to randomize ground traffic type values for the MC simulation after every 20 flights.\r\n        \"\"\"\r\n        if self.ground_traffic_counter % 20 == 0:\r\n            self.temp_ground_traffic = random.choice(['low', 'average', 'high'])\r\n\r\n        self.ground_traffic_counter += 1\r\n        return self.temp_ground_traffic\r\n\r\ndef calculate_dist_affected_due_weather(weather_1: str, weather_2: str, separation: float) -> float:\r\n    \"\"\"\r\n        Calculates change in separation minima (in NM) for current and next flight in queue depending\r\n        on weather type:\r\n            1. same category - no change\r\n            2. category 1 to category 2: +0.5\r\n            3. category 1 to category 3: +1.5\r\n            4. category 2 to category 1: -0.5\r\n            5. category 2 to category 3: +1\r\n            6. category 3 to category 1: -1.5\r\n            7. category 3 to category 2: -1\r\n        :param weather_1: weather type during current flight in queue\r\n        :param weather_2: weather type during next flight in queue\r\n        :param separation: default separation minima defined (5 NM)\r\n        :return: change in separation minima in NM\r\n        >>> calculate_dist_affected_due_weather('cat_1', 'cat_2', 5)\r\n        5.5\r\n    \"\"\"\r\n    if weather_1 == weather_2:\r\n        return separation\r\n    elif weather_1 == 'cat_1':\r\n        if weather_2 == 'cat_2':\r\n            return separation + 0.5\r\n        else:\r\n            return separation + 1.5\r\n    elif weather_1 == 'cat_2':\r\n        if weather_2 == 'cat_1':\r\n            return separation - 0.5\r\n        else:\r\n            return separation + 1\r\n    else:\r\n        if weather_2 == 'cat_1':\r\n            return separation - 1.5\r\n        else:\r\n            return separation - 1\r\n\r\ndef calculate_dist_hyp_2(weather_1: str, weather_2: str, separation: float) -> float:\r\n    \"\"\"\r\n        Calculates change in separation minima (in NM) for current and next flight in queue for hypothesis 2\r\n        where weather is of category 3 (worst) for all flights\r\n        :param weather_1: weather type during current flight in queue\r\n        :param weather_2: weather type during next flight in queue\r\n        :param separation: default separation minima defined (5 NM)\r\n        :return: change in separation minima in NM\r\n        >>> calculate_dist_hyp_2('cat_3, cat_3, 5)\r\n        6\r\n    \"\"\"\r\n    if weather_1 == weather_2:\r\n        return separation + 1\r\n\r\n\r\ndef calculate_dist_affected_due_wind(wind_1: str, wind_2: str, separation: float) -> float:\r\n    \"\"\"\r\n        Calculates change in separation minima (in NM) for current and next flight in queue depending\r\n        on wind type:\r\n            1. same category - no change\r\n            2. headwind to tailwind: -0.2\r\n            3. headwind to crosswind: -0.4\r\n            4. headwind to wind shear: -0.6\r\n            5. tailwind to headwind: +0.2\r\n            6. tailwind to crosswind: -0.2\r\n            7. tailwind to wind shear: -0.4\r\n            8. crosswind to headwind: +0.4\r\n            9. crosswind to tailwind: +0.2\r\n            10. crosswind to wind shear: -0.2\r\n            11. wind shear to headwind: +0.6\r\n            12. wind shear to tailwind: +0.4\r\n            13. wind shear to crosswind: +0.2\r\n        :param wind_1: wind condition during current flight in queue\r\n        :param wind_2: wind condition during next flight in queue\r\n        :param separation: separation distance affected due to weather\r\n        :return: change in separation minima in NM\r\n        >>> calculate_dist_affected_due_wind('headwind', 'crosswind', 5.5)\r\n        5.1\r\n    \"\"\"\r\n    if wind_1 == wind_2:\r\n        return separation\r\n    elif wind_1 == 'headwind':\r\n        if wind_2 == 'tailwind':\r\n            return separation - 0.2\r\n        elif wind_2 == 'crosswind':\r\n            return separation - 0.4\r\n        else:\r\n            return separation - 0.6\r\n    elif wind_1 == 'tailwind':\r\n        if wind_2 == 'headwind':\r\n            return separation + 0.2\r\n        elif wind_2 == 'crosswind':\r\n            return separation - 0.2\r\n        else:\r\n            return separation - 0.4\r\n    elif wind_1 == 'crosswind':\r\n        if wind_2 == 'headwind':\r\n            return separation + 0.4\r\n        elif wind_2 == 'tailwind':\r\n            return separation + 0.2\r\n        else:\r\n            return separation - 0.2\r\n    else:\r\n        if wind_2 == 'headwind':\r\n            return separation + 0.6\r\n        elif wind_2 == 'tailwind':\r\n            return separation + 0.4\r\n        else:\r\n            return separation + 0.2\r\n\r\ndef calculate_dist_affected_due_aircraft_weight_class(aircraft_weight_class_1: str, aircraft_weight_class_2: str, separation: float) -> float:\r\n    \"\"\"\r\n        Calculates change in separation minima (in NM) for current and next flight in queue depending\r\n        on weight class:\r\n            1. same category - no change\r\n            2. light before medium: -1.8\r\n            3. light before heavy: -1.9\r\n            4. light before super: -2\r\n            5. medium before light: +0.4\r\n            6. medium before heavy: -1.8\r\n            7. medium before super: -2\r\n            8. heavy before light: +1.5\r\n            9. heavy before medium: +0.4\r\n            10. heavy before super: -1.8\r\n            11. super before light: +3\r\n            12. super before medium: +2\r\n            13. super before heavy: +1.5\r\n        :param aircraft_weight_class_1: weight class of current flight in queue\r\n        :param aircraft_weight_class_2: weight class of next flight in queue\r\n        :param separation: separation distance affected due to wind\r\n        :return: change in separation minima in NM\r\n        >>> calculate_dist_affected_due_aircraft_weight_class('heavy', 'super', 5.1)\r\n        3.3\r\n    \"\"\"\r\n    if aircraft_weight_class_1 == aircraft_weight_class_2:\r\n        return separation\r\n    elif aircraft_weight_class_1 == 'light':\r\n        if aircraft_weight_class_2 == 'medium':\r\n            return separation - 1.8\r\n        elif aircraft_weight_class_2 == 'heavy':\r\n            return separation - 1.9\r\n        else:\r\n            return separation - 2\r\n    elif aircraft_weight_class_1 == 'medium':\r\n        if aircraft_weight_class_2 == 'light':\r\n            return separation + 0.4\r\n        elif aircraft_weight_class_2 == 'heavy':\r\n            return separation - 1.8\r\n        else:\r\n            return separation - 2\r\n    elif aircraft_weight_class_1 == 'heavy':\r\n        if aircraft_weight_class_2 == 'light':\r\n            return separation + 1.5\r\n        elif aircraft_weight_class_2 == 'medium':\r\n            return separation + 0.4\r\n        else:\r\n            return separation - 1.8\r\n    else:\r\n        if aircraft_weight_class_2 == 'light':\r\n            return separation + 3\r\n        elif aircraft_weight_class_2 == 'medium':\r\n            return separation + 2\r\n        else:\r\n            return separation + 1.5\r\n\r\ndef calculate_dist_affected_due_ground_traffic(ground_traffic_1: str, ground_traffic_2: str, separation: float) -> float:\r\n    \"\"\"\r\n        Calculates change in separation minima (in NM) for current and next flight in queue depending\r\n        on ground traffic:\r\n            1. same category - no change\r\n            2. low to average: +0.2\r\n            3. low to high: +0.4\r\n            4. average to low: -0.2\r\n            5. average to high: +0.2\r\n            6. high to low: -0.4\r\n            7. high to average: -0.2\r\n        :param ground_traffic_1: ground traffic during current flight in queue\r\n        :param ground_traffic_2: ground traffic during next flight in queue\r\n        :param separation: separation distance affected due to weight class\r\n        :return: change in separation minima in NM\r\n        >>> calculate_dist_affected_due_ground_traffic('average', 'high', 3.3)\r\n        3.5\r\n    \"\"\"\r\n    if ground_traffic_1 == ground_traffic_2:\r\n        return separation\r\n    elif ground_traffic_1 == 'low':\r\n        if ground_traffic_2 == 'average':\r\n            return separation + 0.2\r\n        else:\r\n            return separation + 0.4\r\n    elif ground_traffic_1 == 'average':\r\n        if ground_traffic_2 == 'low':\r\n            return separation - 0.2\r\n        else:\r\n            return separation + 0.2\r\n    else:\r\n        if ground_traffic_2 == 'low':\r\n            return separation - 0.4\r\n        else:\r\n            return separation - 0.2\r\n\r\ndef calculate_dist_affected_due_air_traffic_congestion(air_traffic_congestion_1: str, air_traffic_congestion_2: str, separation: float) -> float:\r\n    \"\"\"\r\n        Calculates change in separation minima (in NM) for current and next flight in queue depending\r\n        on air traffic congestion:\r\n            1. same category - no change\r\n            2. regular to max: +0.3\r\n            3. max to regular: -0.3\r\n        :param air_traffic_congestion_1: air traffic congestion during current flight in queue\r\n        :param air_traffic_congestion_2: air traffic congestion during next flight in queue\r\n        :param separation: separation distance affected due to ground traffic\r\n        :return: final change in separation minima in NM\r\n        >>> calculate_dist_affected_due_air_traffic_congestion('max', 'regular', 3.5)\r\n        3.2\r\n    \"\"\"\r\n    if air_traffic_congestion_1 == air_traffic_congestion_2:\r\n        return separation\r\n    elif air_traffic_congestion_1 == 'regular':\r\n        return separation + 0.3\r\n    else:\r\n        return separation - 0.3\r\n\r\n\r\nif __name__ == '__main__':\r\n    airplane_objects_dict = {}\r\n    weather_decider = weather_decider()\r\n    wind_decider = wind_decider()\r\n    weight_decider = weight_decider()\r\n    ground_traffic_decider = ground_traffic_decider()\r\n    distance_list_hyp1 = []\r\n    distance_list_hyp2 = []\r\n\r\n    # 5 NM is the recommended separation minima according to ICAO\r\n    separation_minima = 5\r\n\r\n    #creating dataframe to export simulation data\r\n    hyp1_header = ['weather1', 'weather2', 'wind1', 'wind2', 'aircraft_weight_class1', 'aircraft_weight_class2', 'ground_traffic1', 'ground_traffic2', 'air_traffic_congestion1', 'air_traffic_congestion2', 'caculated_minima']\r\n    df1 = pd.DataFrame(columns=hyp1_header)\r\n    df2 = pd.DataFrame(columns=hyp1_header)\r\n\r\n\r\n    # https://stackoverflow.com/questions/21598872/how-to-create-multiple-class-objects-with-a-loop-in-python\r\n    for i in range(1, 10001):\r\n        name = 'airplane_{}'.format(i)\r\n        airplane_objects_dict[name] = airplane_attributes(weather_decider, wind_decider, weight_decider, ground_traffic_decider, \"hyp_1\")\r\n        if i > 1:\r\n            airplane_name_1 = 'airplane_{}'.format(i - 1)\r\n            airplane_name_2 = 'airplane_{}'.format(i)\r\n            a1 = airplane_objects_dict[airplane_name_1].__dict__\r\n            b1 = airplane_objects_dict[airplane_name_2].__dict__\r\n            distance_affected_due_weather = calculate_dist_affected_due_weather(a1['weather'], b1['weather'], separation_minima)\r\n            distance_affected_due_wind = calculate_dist_affected_due_wind(a1['wind'], b1['wind'], distance_affected_due_weather)\r\n            distance_affected_due_aircraft_weight_class = calculate_dist_affected_due_aircraft_weight_class\\\r\n                (a1['aircraft_weight_class'], b1['aircraft_weight_class'], distance_affected_due_wind)\r\n            distance_affected_due_ground_traffic = calculate_dist_affected_due_ground_traffic\\\r\n                (a1['ground_traffic'], b1['ground_traffic'], distance_affected_due_aircraft_weight_class)\r\n            distance_affected_due_air_traffic_congestion = calculate_dist_affected_due_air_traffic_congestion\\\r\n                (a1['air_traffic_congestion'], b1['air_traffic_congestion'], distance_affected_due_ground_traffic)\r\n            temp_optimized_separation_minima = distance_affected_due_air_traffic_congestion\r\n\r\n            to_append = [a1['weather'], b1['weather'], a1['wind'], b1['wind'], a1['aircraft_weight_class'], b1['aircraft_weight_class'],\\\r\n                           a1['ground_traffic'], b1['ground_traffic'], a1['air_traffic_congestion'], b1['air_traffic_congestion'], distance_affected_due_ground_traffic]\r\n            a_series = pd.Series(to_append, index=df1.columns)\r\n            df1 = df1.append(a_series, ignore_index=True)\r\n            distance_list_hyp1.append(temp_optimized_separation_minima)\r\n\r\n    # exporting to csv\r\n    df1.to_csv('hyp1.csv')\r\n    optimized_separation_minima_hyp1 = sum(distance_list_hyp1)/len(distance_list_hyp1)\r\n    output_hyp1 = round(optimized_separation_minima_hyp1, 3)\r\n    print(\"The final calculated separation minima for hypothesis 1 is {}\".format(output_hyp1))\r\n\r\n\r\n    # Testing Hypothesis-2:\r\n    for i in range(1, 10001):\r\n     name = 'airplane_{}'.format(i)\r\n     airplane_objects_dict[name] = airplane_attributes(weather_decider, wind_decider, weight_decider, ground_traffic_decider, \"hyp_2\")\r\n     if i > 1:\r\n         airplane_name_1 = 'airplane_{}'.format(i - 1)\r\n         airplane_name_2 = 'airplane_{}'.format(i)\r\n         a2 = airplane_objects_dict[airplane_name_1].__dict__\r\n         b2 = airplane_objects_dict[airplane_name_2].__dict__\r\n         distance_affected_due_weather = calculate_dist_hyp_2(a2['weather'], b2['weather'], separation_minima)\r\n         distance_affected_due_wind = calculate_dist_affected_due_wind(a2['wind'], b2['wind'], distance_affected_due_weather)\r\n         distance_affected_due_aircraft_weight_class = calculate_dist_affected_due_aircraft_weight_class\\\r\n             (a2['aircraft_weight_class'], b2['aircraft_weight_class'], distance_affected_due_wind)\r\n         distance_affected_due_ground_traffic = calculate_dist_affected_due_ground_traffic\\\r\n             (a2['ground_traffic'], b2['ground_traffic'], distance_affected_due_aircraft_weight_class)\r\n         distance_affected_due_air_traffic_congestion = calculate_dist_affected_due_air_traffic_congestion\\\r\n             (a2['air_traffic_congestion'], b2['air_traffic_congestion'], distance_affected_due_ground_traffic)\r\n         temp_optimized_separation_minima = distance_affected_due_air_traffic_congestion\r\n\r\n         to_append = [a2['weather'], b2['weather'], a2['wind'], b2['wind'], a2['aircraft_weight_class'], b2['aircraft_weight_class'], \\\r\n                      a2['ground_traffic'], b2['ground_traffic'], a2['air_traffic_congestion'], b2['air_traffic_congestion'], distance_affected_due_ground_traffic]\r\n         a_series = pd.Series(to_append, index=df1.columns)\r\n         df2 = df2.append(a_series, ignore_index=True)\r\n\r\n         distance_list_hyp2.append(temp_optimized_separation_minima)\r\n\r\n    # exporting to csv\r\n    df2.to_csv('hyp2.csv')\r\n    optimized_separation_minima_hyp2 = sum(distance_list_hyp2)/len(distance_list_hyp2)\r\n    output_hyp2 = round(optimized_separation_minima_hyp2, 3)\r\n    print(\"\\nThe final calculated separation minima for hypothesis 2 is {}\".format(output_hyp2))
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/2022Spring_Finals.py b/2022Spring_Finals.py
+--- a/2022Spring_Finals.py	(revision 2f46009e8fb56ffaa853ca9114f821f766361a58)
++++ b/2022Spring_Finals.py	(date 1651977347629)
+@@ -174,7 +174,7 @@
+         :param weather_2: weather type during next flight in queue
+         :param separation: default separation minima defined (5 NM)
+         :return: change in separation minima in NM
+-        >>> calculate_dist_hyp_2('cat_3, cat_3, 5)
++        >>> calculate_dist_hyp_2('cat_3', 'cat_3', 5)
+         6
+     """
+     if weather_1 == weather_2:
+@@ -350,6 +350,11 @@
+ 
+ 
+ if __name__ == '__main__':
++    import doctest
++    #import 2022Spring_Finals
++
++    print(doctest.testmod())
++
+     airplane_objects_dict = {}
+     weather_decider = weather_decider()
+     wind_decider = wind_decider()
+@@ -368,7 +373,7 @@
+ 
+ 
+     # https://stackoverflow.com/questions/21598872/how-to-create-multiple-class-objects-with-a-loop-in-python
+-    for i in range(1, 10001):
++    for i in range(1, 1001):
+         name = 'airplane_{}'.format(i)
+         airplane_objects_dict[name] = airplane_attributes(weather_decider, wind_decider, weight_decider, ground_traffic_decider, "hyp_1")
+         if i > 1:
+@@ -393,14 +398,14 @@
+             distance_list_hyp1.append(temp_optimized_separation_minima)
+ 
+     # exporting to csv
+-    df1.to_csv('hyp1.csv')
++    df1.to_csv('hyp1_small.csv')
+     optimized_separation_minima_hyp1 = sum(distance_list_hyp1)/len(distance_list_hyp1)
+     output_hyp1 = round(optimized_separation_minima_hyp1, 3)
+     print("The final calculated separation minima for hypothesis 1 is {}".format(output_hyp1))
+ 
+ 
+     # Testing Hypothesis-2:
+-    for i in range(1, 10001):
++    for i in range(1, 1001):
+      name = 'airplane_{}'.format(i)
+      airplane_objects_dict[name] = airplane_attributes(weather_decider, wind_decider, weight_decider, ground_traffic_decider, "hyp_2")
+      if i > 1:
+@@ -426,7 +431,7 @@
+          distance_list_hyp2.append(temp_optimized_separation_minima)
+ 
+     # exporting to csv
+-    df2.to_csv('hyp2.csv')
++    df2.to_csv('hyp2_small.csv')
+     optimized_separation_minima_hyp2 = sum(distance_list_hyp2)/len(distance_list_hyp2)
+     output_hyp2 = round(optimized_separation_minima_hyp2, 3)
+     print("\nThe final calculated separation minima for hypothesis 2 is {}".format(output_hyp2))
+\ No newline at end of file
+Index: Hypothesis_1.ipynb
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>{\r\n \"cells\": [\r\n  {\r\n   \"cell_type\": \"code\",\r\n   \"execution_count\": null,\r\n   \"metadata\": {\r\n    \"collapsed\": true\r\n   },\r\n   \"outputs\": [],\r\n   \"source\": [\r\n    \"import pandas as pd\\n\",\r\n    \"import numpy as np\\n\",\r\n    \"import matplotlib.pyplot as plt\\n\",\r\n    \"import seaborn as sns\\n\",\r\n    \"import plotly.express as px\"\r\n   ]\r\n  },\r\n  {\r\n   \"cell_type\": \"code\",\r\n   \"execution_count\": null,\r\n   \"outputs\": [],\r\n   \"source\": [\r\n    \"hyp1 = pd.read_csv('hyp1.csv')\"\r\n   ],\r\n   \"metadata\": {\r\n    \"collapsed\": false,\r\n    \"pycharm\": {\r\n     \"name\": \"#%%\\n\"\r\n    }\r\n   }\r\n  },\r\n  {\r\n   \"cell_type\": \"code\",\r\n   \"execution_count\": null,\r\n   \"outputs\": [],\r\n   \"source\": [],\r\n   \"metadata\": {\r\n    \"collapsed\": false,\r\n    \"pycharm\": {\r\n     \"name\": \"#%%\\n\"\r\n    }\r\n   }\r\n  }\r\n ],\r\n \"metadata\": {\r\n  \"kernelspec\": {\r\n   \"display_name\": \"Python 3\",\r\n   \"language\": \"python\",\r\n   \"name\": \"python3\"\r\n  },\r\n  \"language_info\": {\r\n   \"codemirror_mode\": {\r\n    \"name\": \"ipython\",\r\n    \"version\": 2\r\n   },\r\n   \"file_extension\": \".py\",\r\n   \"mimetype\": \"text/x-python\",\r\n   \"name\": \"python\",\r\n   \"nbconvert_exporter\": \"python\",\r\n   \"pygments_lexer\": \"ipython2\",\r\n   \"version\": \"2.7.6\"\r\n  }\r\n },\r\n \"nbformat\": 4,\r\n \"nbformat_minor\": 0\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Hypothesis_1.ipynb b/Hypothesis_1.ipynb
+--- a/Hypothesis_1.ipynb	(revision 2f46009e8fb56ffaa853ca9114f821f766361a58)
++++ b/Hypothesis_1.ipynb	(date 1652038338246)
+@@ -2,65 +2,746 @@
+  "cells": [
+   {
+    "cell_type": "code",
+-   "execution_count": null,
+-   "metadata": {
+-    "collapsed": true
+-   },
++   "execution_count": 140,
++   "metadata": {},
+    "outputs": [],
+    "source": [
+     "import pandas as pd\n",
+     "import numpy as np\n",
+     "import matplotlib.pyplot as plt\n",
++    "import matplotlib.mlab as mlab\n",
+     "import seaborn as sns\n",
+     "import plotly.express as px"
+    ]
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": null,
++   "execution_count": 141,
++   "metadata": {
++    "pycharm": {
++     "name": "#%%\n"
++    }
++   },
+    "outputs": [],
+    "source": [
+-    "hyp1 = pd.read_csv('hyp1.csv')"
+-   ],
++    "df = pd.read_csv('hyp1_small.csv')"
++   ]
++  },
++  {
++   "cell_type": "code",
++   "execution_count": 142,
+    "metadata": {
+-    "collapsed": false,
+     "pycharm": {
+      "name": "#%%\n"
+     }
+-   }
++   },
++   "outputs": [
++    {
++     "data": {
++      "text/html": [
++       "<div>\n",
++       "<style scoped>\n",
++       "    .dataframe tbody tr th:only-of-type {\n",
++       "        vertical-align: middle;\n",
++       "    }\n",
++       "\n",
++       "    .dataframe tbody tr th {\n",
++       "        vertical-align: top;\n",
++       "    }\n",
++       "\n",
++       "    .dataframe thead th {\n",
++       "        text-align: right;\n",
++       "    }\n",
++       "</style>\n",
++       "<table border=\"1\" class=\"dataframe\">\n",
++       "  <thead>\n",
++       "    <tr style=\"text-align: right;\">\n",
++       "      <th></th>\n",
++       "      <th>Unnamed: 0</th>\n",
++       "      <th>weather1</th>\n",
++       "      <th>weather2</th>\n",
++       "      <th>wind1</th>\n",
++       "      <th>wind2</th>\n",
++       "      <th>aircraft_weight_class1</th>\n",
++       "      <th>aircraft_weight_class2</th>\n",
++       "      <th>ground_traffic1</th>\n",
++       "      <th>ground_traffic2</th>\n",
++       "      <th>air_traffic_congestion1</th>\n",
++       "      <th>air_traffic_congestion2</th>\n",
++       "      <th>caculated_minima</th>\n",
++       "    </tr>\n",
++       "  </thead>\n",
++       "  <tbody>\n",
++       "    <tr>\n",
++       "      <th>0</th>\n",
++       "      <td>0</td>\n",
++       "      <td>cat_1</td>\n",
++       "      <td>cat_1</td>\n",
++       "      <td>headwind</td>\n",
++       "      <td>headwind</td>\n",
++       "      <td>heavy</td>\n",
++       "      <td>medium</td>\n",
++       "      <td>low</td>\n",
++       "      <td>low</td>\n",
++       "      <td>regular</td>\n",
++       "      <td>regular</td>\n",
++       "      <td>5.4</td>\n",
++       "    </tr>\n",
++       "    <tr>\n",
++       "      <th>1</th>\n",
++       "      <td>1</td>\n",
++       "      <td>cat_1</td>\n",
++       "      <td>cat_1</td>\n",
++       "      <td>headwind</td>\n",
++       "      <td>headwind</td>\n",
++       "      <td>medium</td>\n",
++       "      <td>super</td>\n",
++       "      <td>low</td>\n",
++       "      <td>low</td>\n",
++       "      <td>regular</td>\n",
++       "      <td>regular</td>\n",
++       "      <td>3.0</td>\n",
++       "    </tr>\n",
++       "    <tr>\n",
++       "      <th>2</th>\n",
++       "      <td>2</td>\n",
++       "      <td>cat_1</td>\n",
++       "      <td>cat_1</td>\n",
++       "      <td>headwind</td>\n",
++       "      <td>headwind</td>\n",
++       "      <td>super</td>\n",
++       "      <td>medium</td>\n",
++       "      <td>low</td>\n",
++       "      <td>low</td>\n",
++       "      <td>regular</td>\n",
++       "      <td>regular</td>\n",
++       "      <td>7.0</td>\n",
++       "    </tr>\n",
++       "    <tr>\n",
++       "      <th>3</th>\n",
++       "      <td>3</td>\n",
++       "      <td>cat_1</td>\n",
++       "      <td>cat_1</td>\n",
++       "      <td>headwind</td>\n",
++       "      <td>headwind</td>\n",
++       "      <td>medium</td>\n",
++       "      <td>heavy</td>\n",
++       "      <td>low</td>\n",
++       "      <td>low</td>\n",
++       "      <td>regular</td>\n",
++       "      <td>regular</td>\n",
++       "      <td>3.2</td>\n",
++       "    </tr>\n",
++       "    <tr>\n",
++       "      <th>4</th>\n",
++       "      <td>4</td>\n",
++       "      <td>cat_1</td>\n",
++       "      <td>cat_1</td>\n",
++       "      <td>headwind</td>\n",
++       "      <td>headwind</td>\n",
++       "      <td>heavy</td>\n",
++       "      <td>medium</td>\n",
++       "      <td>low</td>\n",
++       "      <td>low</td>\n",
++       "      <td>regular</td>\n",
++       "      <td>regular</td>\n",
++       "      <td>5.4</td>\n",
++       "    </tr>\n",
++       "    <tr>\n",
++       "      <th>...</th>\n",
++       "      <td>...</td>\n",
++       "      <td>...</td>\n",
++       "      <td>...</td>\n",
++       "      <td>...</td>\n",
++       "      <td>...</td>\n",
++       "      <td>...</td>\n",
++       "      <td>...</td>\n",
++       "      <td>...</td>\n",
++       "      <td>...</td>\n",
++       "      <td>...</td>\n",
++       "      <td>...</td>\n",
++       "      <td>...</td>\n",
++       "    </tr>\n",
++       "    <tr>\n",
++       "      <th>994</th>\n",
++       "      <td>994</td>\n",
++       "      <td>cat_3</td>\n",
++       "      <td>cat_3</td>\n",
++       "      <td>headwind</td>\n",
++       "      <td>headwind</td>\n",
++       "      <td>medium</td>\n",
++       "      <td>medium</td>\n",
++       "      <td>average</td>\n",
++       "      <td>average</td>\n",
++       "      <td>regular</td>\n",
++       "      <td>regular</td>\n",
++       "      <td>5.0</td>\n",
++       "    </tr>\n",
++       "    <tr>\n",
++       "      <th>995</th>\n",
++       "      <td>995</td>\n",
++       "      <td>cat_3</td>\n",
++       "      <td>cat_3</td>\n",
++       "      <td>headwind</td>\n",
++       "      <td>headwind</td>\n",
++       "      <td>medium</td>\n",
++       "      <td>medium</td>\n",
++       "      <td>average</td>\n",
++       "      <td>average</td>\n",
++       "      <td>regular</td>\n",
++       "      <td>regular</td>\n",
++       "      <td>5.0</td>\n",
++       "    </tr>\n",
++       "    <tr>\n",
++       "      <th>996</th>\n",
++       "      <td>996</td>\n",
++       "      <td>cat_3</td>\n",
++       "      <td>cat_3</td>\n",
++       "      <td>headwind</td>\n",
++       "      <td>headwind</td>\n",
++       "      <td>medium</td>\n",
++       "      <td>heavy</td>\n",
++       "      <td>average</td>\n",
++       "      <td>average</td>\n",
++       "      <td>regular</td>\n",
++       "      <td>regular</td>\n",
++       "      <td>3.2</td>\n",
++       "    </tr>\n",
++       "    <tr>\n",
++       "      <th>997</th>\n",
++       "      <td>997</td>\n",
++       "      <td>cat_3</td>\n",
++       "      <td>cat_3</td>\n",
++       "      <td>headwind</td>\n",
++       "      <td>headwind</td>\n",
++       "      <td>heavy</td>\n",
++       "      <td>light</td>\n",
++       "      <td>average</td>\n",
++       "      <td>average</td>\n",
++       "      <td>regular</td>\n",
++       "      <td>regular</td>\n",
++       "      <td>6.5</td>\n",
++       "    </tr>\n",
++       "    <tr>\n",
++       "      <th>998</th>\n",
++       "      <td>998</td>\n",
++       "      <td>cat_3</td>\n",
++       "      <td>cat_3</td>\n",
++       "      <td>headwind</td>\n",
++       "      <td>headwind</td>\n",
++       "      <td>light</td>\n",
++       "      <td>medium</td>\n",
++       "      <td>average</td>\n",
++       "      <td>average</td>\n",
++       "      <td>regular</td>\n",
++       "      <td>regular</td>\n",
++       "      <td>3.2</td>\n",
++       "    </tr>\n",
++       "  </tbody>\n",
++       "</table>\n",
++       "<p>999 rows × 12 columns</p>\n",
++       "</div>"
++      ],
++      "text/plain": [
++       "     Unnamed: 0 weather1 weather2     wind1     wind2 aircraft_weight_class1  \\\n",
++       "0             0    cat_1    cat_1  headwind  headwind                  heavy   \n",
++       "1             1    cat_1    cat_1  headwind  headwind                 medium   \n",
++       "2             2    cat_1    cat_1  headwind  headwind                  super   \n",
++       "3             3    cat_1    cat_1  headwind  headwind                 medium   \n",
++       "4             4    cat_1    cat_1  headwind  headwind                  heavy   \n",
++       "..          ...      ...      ...       ...       ...                    ...   \n",
++       "994         994    cat_3    cat_3  headwind  headwind                 medium   \n",
++       "995         995    cat_3    cat_3  headwind  headwind                 medium   \n",
++       "996         996    cat_3    cat_3  headwind  headwind                 medium   \n",
++       "997         997    cat_3    cat_3  headwind  headwind                  heavy   \n",
++       "998         998    cat_3    cat_3  headwind  headwind                  light   \n",
++       "\n",
++       "    aircraft_weight_class2 ground_traffic1 ground_traffic2  \\\n",
++       "0                   medium             low             low   \n",
++       "1                    super             low             low   \n",
++       "2                   medium             low             low   \n",
++       "3                    heavy             low             low   \n",
++       "4                   medium             low             low   \n",
++       "..                     ...             ...             ...   \n",
++       "994                 medium         average         average   \n",
++       "995                 medium         average         average   \n",
++       "996                  heavy         average         average   \n",
++       "997                  light         average         average   \n",
++       "998                 medium         average         average   \n",
++       "\n",
++       "    air_traffic_congestion1 air_traffic_congestion2  caculated_minima  \n",
++       "0                   regular                 regular               5.4  \n",
++       "1                   regular                 regular               3.0  \n",
++       "2                   regular                 regular               7.0  \n",
++       "3                   regular                 regular               3.2  \n",
++       "4                   regular                 regular               5.4  \n",
++       "..                      ...                     ...               ...  \n",
++       "994                 regular                 regular               5.0  \n",
++       "995                 regular                 regular               5.0  \n",
++       "996                 regular                 regular               3.2  \n",
++       "997                 regular                 regular               6.5  \n",
++       "998                 regular                 regular               3.2  \n",
++       "\n",
++       "[999 rows x 12 columns]"
++      ]
++     },
++     "execution_count": 142,
++     "metadata": {},
++     "output_type": "execute_result"
++    }
++   ],
++   "source": [
++    "df"
++   ]
++  },
++  {
++   "cell_type": "code",
++   "execution_count": 135,
++   "metadata": {},
++   "outputs": [],
++   "source": [
++    "df = df.rename(columns={'Unnamed: 0':'rownum', 'caculated_minima': 'calculated_minima'}, inplace = False)"
++   ]
++  },
++  {
++   "cell_type": "code",
++   "execution_count": 136,
++   "metadata": {},
++   "outputs": [],
++   "source": [
++    "df['rownum'] = df['rownum'] + 1"
++   ]
++  },
++  {
++   "cell_type": "code",
++   "execution_count": 137,
++   "metadata": {},
++   "outputs": [],
++   "source": [
++    "#df.groupby('weather1').apply(pd.DataFrame.sort, 'calculated_minima')\n",
++    "#df=df.sort_values(['weather1','calculated_minima']).groupby('weather1')\n",
++    "df = df.groupby(['weather1'])['calculated_minima'].mean()"
++   ]
++  },
++  {
++   "cell_type": "code",
++   "execution_count": 138,
++   "metadata": {},
++   "outputs": [
++    {
++     "data": {
++      "text/plain": [
++       "weather1\n",
++       "cat_1    4.69750\n",
++       "cat_2    4.84100\n",
++       "cat_3    4.71022\n",
++       "Name: calculated_minima, dtype: float64"
++      ]
++     },
++     "execution_count": 138,
++     "metadata": {},
++     "output_type": "execute_result"
++    }
++   ],
++   "source": [
++    "df"
++   ]
++  },
++  {
++   "cell_type": "code",
++   "execution_count": 139,
++   "metadata": {},
++   "outputs": [
++    {
++     "ename": "KeyError",
++     "evalue": "'calculated_minima'",
++     "output_type": "error",
++     "traceback": [
++      "\u001B[1;31m---------------------------------------------------------------------------\u001B[0m",
++      "\u001B[1;31mKeyError\u001B[0m                                  Traceback (most recent call last)",
++      "\u001B[1;32m~\\anaconda3\\lib\\site-packages\\pandas\\core\\indexes\\base.py\u001B[0m in \u001B[0;36mget_loc\u001B[1;34m(self, key, method, tolerance)\u001B[0m\n\u001B[0;32m   3360\u001B[0m             \u001B[1;32mtry\u001B[0m\u001B[1;33m:\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n\u001B[1;32m-> 3361\u001B[1;33m                 \u001B[1;32mreturn\u001B[0m \u001B[0mself\u001B[0m\u001B[1;33m.\u001B[0m\u001B[0m_engine\u001B[0m\u001B[1;33m.\u001B[0m\u001B[0mget_loc\u001B[0m\u001B[1;33m(\u001B[0m\u001B[0mcasted_key\u001B[0m\u001B[1;33m)\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n\u001B[0m\u001B[0;32m   3362\u001B[0m             \u001B[1;32mexcept\u001B[0m \u001B[0mKeyError\u001B[0m \u001B[1;32mas\u001B[0m \u001B[0merr\u001B[0m\u001B[1;33m:\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n",
++      "\u001B[1;32m~\\anaconda3\\lib\\site-packages\\pandas\\_libs\\index.pyx\u001B[0m in \u001B[0;36mpandas._libs.index.IndexEngine.get_loc\u001B[1;34m()\u001B[0m\n",
++      "\u001B[1;32m~\\anaconda3\\lib\\site-packages\\pandas\\_libs\\index.pyx\u001B[0m in \u001B[0;36mpandas._libs.index.IndexEngine.get_loc\u001B[1;34m()\u001B[0m\n",
++      "\u001B[1;32mpandas\\_libs\\hashtable_class_helper.pxi\u001B[0m in \u001B[0;36mpandas._libs.hashtable.PyObjectHashTable.get_item\u001B[1;34m()\u001B[0m\n",
++      "\u001B[1;32mpandas\\_libs\\hashtable_class_helper.pxi\u001B[0m in \u001B[0;36mpandas._libs.hashtable.PyObjectHashTable.get_item\u001B[1;34m()\u001B[0m\n",
++      "\u001B[1;31mKeyError\u001B[0m: 'calculated_minima'",
++      "\nThe above exception was the direct cause of the following exception:\n",
++      "\u001B[1;31mKeyError\u001B[0m                                  Traceback (most recent call last)",
++      "\u001B[1;32m~\\AppData\\Local\\Temp/ipykernel_26604/3297777548.py\u001B[0m in \u001B[0;36m<module>\u001B[1;34m\u001B[0m\n\u001B[1;32m----> 1\u001B[1;33m \u001B[0mdf\u001B[0m\u001B[1;33m[\u001B[0m\u001B[1;34m'calculated_minima'\u001B[0m\u001B[1;33m]\u001B[0m\u001B[1;33m.\u001B[0m\u001B[0mdescribe\u001B[0m\u001B[1;33m(\u001B[0m\u001B[1;33m)\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n\u001B[0m",
++      "\u001B[1;32m~\\anaconda3\\lib\\site-packages\\pandas\\core\\series.py\u001B[0m in \u001B[0;36m__getitem__\u001B[1;34m(self, key)\u001B[0m\n\u001B[0;32m    940\u001B[0m \u001B[1;33m\u001B[0m\u001B[0m\n\u001B[0;32m    941\u001B[0m         \u001B[1;32melif\u001B[0m \u001B[0mkey_is_scalar\u001B[0m\u001B[1;33m:\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n\u001B[1;32m--> 942\u001B[1;33m             \u001B[1;32mreturn\u001B[0m \u001B[0mself\u001B[0m\u001B[1;33m.\u001B[0m\u001B[0m_get_value\u001B[0m\u001B[1;33m(\u001B[0m\u001B[0mkey\u001B[0m\u001B[1;33m)\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n\u001B[0m\u001B[0;32m    943\u001B[0m \u001B[1;33m\u001B[0m\u001B[0m\n\u001B[0;32m    944\u001B[0m         \u001B[1;32mif\u001B[0m \u001B[0mis_hashable\u001B[0m\u001B[1;33m(\u001B[0m\u001B[0mkey\u001B[0m\u001B[1;33m)\u001B[0m\u001B[1;33m:\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n",
++      "\u001B[1;32m~\\anaconda3\\lib\\site-packages\\pandas\\core\\series.py\u001B[0m in \u001B[0;36m_get_value\u001B[1;34m(self, label, takeable)\u001B[0m\n\u001B[0;32m   1049\u001B[0m \u001B[1;33m\u001B[0m\u001B[0m\n\u001B[0;32m   1050\u001B[0m         \u001B[1;31m# Similar to Index.get_value, but we do not fall back to positional\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n\u001B[1;32m-> 1051\u001B[1;33m         \u001B[0mloc\u001B[0m \u001B[1;33m=\u001B[0m \u001B[0mself\u001B[0m\u001B[1;33m.\u001B[0m\u001B[0mindex\u001B[0m\u001B[1;33m.\u001B[0m\u001B[0mget_loc\u001B[0m\u001B[1;33m(\u001B[0m\u001B[0mlabel\u001B[0m\u001B[1;33m)\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n\u001B[0m\u001B[0;32m   1052\u001B[0m         \u001B[1;32mreturn\u001B[0m \u001B[0mself\u001B[0m\u001B[1;33m.\u001B[0m\u001B[0mindex\u001B[0m\u001B[1;33m.\u001B[0m\u001B[0m_get_values_for_loc\u001B[0m\u001B[1;33m(\u001B[0m\u001B[0mself\u001B[0m\u001B[1;33m,\u001B[0m \u001B[0mloc\u001B[0m\u001B[1;33m,\u001B[0m \u001B[0mlabel\u001B[0m\u001B[1;33m)\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n\u001B[0;32m   1053\u001B[0m \u001B[1;33m\u001B[0m\u001B[0m\n",
++      "\u001B[1;32m~\\anaconda3\\lib\\site-packages\\pandas\\core\\indexes\\base.py\u001B[0m in \u001B[0;36mget_loc\u001B[1;34m(self, key, method, tolerance)\u001B[0m\n\u001B[0;32m   3361\u001B[0m                 \u001B[1;32mreturn\u001B[0m \u001B[0mself\u001B[0m\u001B[1;33m.\u001B[0m\u001B[0m_engine\u001B[0m\u001B[1;33m.\u001B[0m\u001B[0mget_loc\u001B[0m\u001B[1;33m(\u001B[0m\u001B[0mcasted_key\u001B[0m\u001B[1;33m)\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n\u001B[0;32m   3362\u001B[0m             \u001B[1;32mexcept\u001B[0m \u001B[0mKeyError\u001B[0m \u001B[1;32mas\u001B[0m \u001B[0merr\u001B[0m\u001B[1;33m:\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n\u001B[1;32m-> 3363\u001B[1;33m                 \u001B[1;32mraise\u001B[0m \u001B[0mKeyError\u001B[0m\u001B[1;33m(\u001B[0m\u001B[0mkey\u001B[0m\u001B[1;33m)\u001B[0m \u001B[1;32mfrom\u001B[0m \u001B[0merr\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n\u001B[0m\u001B[0;32m   3364\u001B[0m \u001B[1;33m\u001B[0m\u001B[0m\n\u001B[0;32m   3365\u001B[0m         \u001B[1;32mif\u001B[0m \u001B[0mis_scalar\u001B[0m\u001B[1;33m(\u001B[0m\u001B[0mkey\u001B[0m\u001B[1;33m)\u001B[0m \u001B[1;32mand\u001B[0m \u001B[0misna\u001B[0m\u001B[1;33m(\u001B[0m\u001B[0mkey\u001B[0m\u001B[1;33m)\u001B[0m \u001B[1;32mand\u001B[0m \u001B[1;32mnot\u001B[0m \u001B[0mself\u001B[0m\u001B[1;33m.\u001B[0m\u001B[0mhasnans\u001B[0m\u001B[1;33m:\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n",
++      "\u001B[1;31mKeyError\u001B[0m: 'calculated_minima'"
++     ]
++    }
++   ],
++   "source": [
++    "df['calculated_minima'].describe()"
++   ]
++  },
++  {
++   "cell_type": "code",
++   "execution_count": 130,
++   "metadata": {},
++   "outputs": [
++    {
++     "ename": "KeyError",
++     "evalue": "'calculated_minima'",
++     "output_type": "error",
++     "traceback": [
++      "\u001B[1;31m---------------------------------------------------------------------------\u001B[0m",
++      "\u001B[1;31mKeyError\u001B[0m                                  Traceback (most recent call last)",
++      "\u001B[1;32m~\\anaconda3\\lib\\site-packages\\pandas\\core\\indexes\\base.py\u001B[0m in \u001B[0;36mget_loc\u001B[1;34m(self, key, method, tolerance)\u001B[0m\n\u001B[0;32m   3360\u001B[0m             \u001B[1;32mtry\u001B[0m\u001B[1;33m:\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n\u001B[1;32m-> 3361\u001B[1;33m                 \u001B[1;32mreturn\u001B[0m \u001B[0mself\u001B[0m\u001B[1;33m.\u001B[0m\u001B[0m_engine\u001B[0m\u001B[1;33m.\u001B[0m\u001B[0mget_loc\u001B[0m\u001B[1;33m(\u001B[0m\u001B[0mcasted_key\u001B[0m\u001B[1;33m)\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n\u001B[0m\u001B[0;32m   3362\u001B[0m             \u001B[1;32mexcept\u001B[0m \u001B[0mKeyError\u001B[0m \u001B[1;32mas\u001B[0m \u001B[0merr\u001B[0m\u001B[1;33m:\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n",
++      "\u001B[1;32m~\\anaconda3\\lib\\site-packages\\pandas\\_libs\\index.pyx\u001B[0m in \u001B[0;36mpandas._libs.index.IndexEngine.get_loc\u001B[1;34m()\u001B[0m\n",
++      "\u001B[1;32m~\\anaconda3\\lib\\site-packages\\pandas\\_libs\\index.pyx\u001B[0m in \u001B[0;36mpandas._libs.index.IndexEngine.get_loc\u001B[1;34m()\u001B[0m\n",
++      "\u001B[1;32mpandas\\_libs\\hashtable_class_helper.pxi\u001B[0m in \u001B[0;36mpandas._libs.hashtable.PyObjectHashTable.get_item\u001B[1;34m()\u001B[0m\n",
++      "\u001B[1;32mpandas\\_libs\\hashtable_class_helper.pxi\u001B[0m in \u001B[0;36mpandas._libs.hashtable.PyObjectHashTable.get_item\u001B[1;34m()\u001B[0m\n",
++      "\u001B[1;31mKeyError\u001B[0m: 'calculated_minima'",
++      "\nThe above exception was the direct cause of the following exception:\n",
++      "\u001B[1;31mKeyError\u001B[0m                                  Traceback (most recent call last)",
++      "\u001B[1;32m~\\AppData\\Local\\Temp/ipykernel_26604/1672404773.py\u001B[0m in \u001B[0;36m<module>\u001B[1;34m\u001B[0m\n\u001B[1;32m----> 1\u001B[1;33m \u001B[0mplt\u001B[0m\u001B[1;33m.\u001B[0m\u001B[0mhist\u001B[0m\u001B[1;33m(\u001B[0m\u001B[0mdf\u001B[0m\u001B[1;33m[\u001B[0m\u001B[1;34m'calculated_minima'\u001B[0m\u001B[1;33m]\u001B[0m\u001B[1;33m,\u001B[0m \u001B[0mbins\u001B[0m\u001B[1;33m=\u001B[0m\u001B[1;36m5\u001B[0m\u001B[1;33m,\u001B[0m \u001B[0malign\u001B[0m\u001B[1;33m=\u001B[0m\u001B[1;34m'right'\u001B[0m\u001B[1;33m,\u001B[0m \u001B[0mcolor\u001B[0m\u001B[1;33m=\u001B[0m\u001B[1;34m'purple'\u001B[0m\u001B[1;33m,\u001B[0m \u001B[0medgecolor\u001B[0m\u001B[1;33m=\u001B[0m\u001B[1;34m'black'\u001B[0m\u001B[1;33m)\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n\u001B[0m",
++      "\u001B[1;32m~\\anaconda3\\lib\\site-packages\\pandas\\core\\series.py\u001B[0m in \u001B[0;36m__getitem__\u001B[1;34m(self, key)\u001B[0m\n\u001B[0;32m    940\u001B[0m \u001B[1;33m\u001B[0m\u001B[0m\n\u001B[0;32m    941\u001B[0m         \u001B[1;32melif\u001B[0m \u001B[0mkey_is_scalar\u001B[0m\u001B[1;33m:\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n\u001B[1;32m--> 942\u001B[1;33m             \u001B[1;32mreturn\u001B[0m \u001B[0mself\u001B[0m\u001B[1;33m.\u001B[0m\u001B[0m_get_value\u001B[0m\u001B[1;33m(\u001B[0m\u001B[0mkey\u001B[0m\u001B[1;33m)\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n\u001B[0m\u001B[0;32m    943\u001B[0m \u001B[1;33m\u001B[0m\u001B[0m\n\u001B[0;32m    944\u001B[0m         \u001B[1;32mif\u001B[0m \u001B[0mis_hashable\u001B[0m\u001B[1;33m(\u001B[0m\u001B[0mkey\u001B[0m\u001B[1;33m)\u001B[0m\u001B[1;33m:\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n",
++      "\u001B[1;32m~\\anaconda3\\lib\\site-packages\\pandas\\core\\series.py\u001B[0m in \u001B[0;36m_get_value\u001B[1;34m(self, label, takeable)\u001B[0m\n\u001B[0;32m   1049\u001B[0m \u001B[1;33m\u001B[0m\u001B[0m\n\u001B[0;32m   1050\u001B[0m         \u001B[1;31m# Similar to Index.get_value, but we do not fall back to positional\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n\u001B[1;32m-> 1051\u001B[1;33m         \u001B[0mloc\u001B[0m \u001B[1;33m=\u001B[0m \u001B[0mself\u001B[0m\u001B[1;33m.\u001B[0m\u001B[0mindex\u001B[0m\u001B[1;33m.\u001B[0m\u001B[0mget_loc\u001B[0m\u001B[1;33m(\u001B[0m\u001B[0mlabel\u001B[0m\u001B[1;33m)\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n\u001B[0m\u001B[0;32m   1052\u001B[0m         \u001B[1;32mreturn\u001B[0m \u001B[0mself\u001B[0m\u001B[1;33m.\u001B[0m\u001B[0mindex\u001B[0m\u001B[1;33m.\u001B[0m\u001B[0m_get_values_for_loc\u001B[0m\u001B[1;33m(\u001B[0m\u001B[0mself\u001B[0m\u001B[1;33m,\u001B[0m \u001B[0mloc\u001B[0m\u001B[1;33m,\u001B[0m \u001B[0mlabel\u001B[0m\u001B[1;33m)\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n\u001B[0;32m   1053\u001B[0m \u001B[1;33m\u001B[0m\u001B[0m\n",
++      "\u001B[1;32m~\\anaconda3\\lib\\site-packages\\pandas\\core\\indexes\\base.py\u001B[0m in \u001B[0;36mget_loc\u001B[1;34m(self, key, method, tolerance)\u001B[0m\n\u001B[0;32m   3361\u001B[0m                 \u001B[1;32mreturn\u001B[0m \u001B[0mself\u001B[0m\u001B[1;33m.\u001B[0m\u001B[0m_engine\u001B[0m\u001B[1;33m.\u001B[0m\u001B[0mget_loc\u001B[0m\u001B[1;33m(\u001B[0m\u001B[0mcasted_key\u001B[0m\u001B[1;33m)\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n\u001B[0;32m   3362\u001B[0m             \u001B[1;32mexcept\u001B[0m \u001B[0mKeyError\u001B[0m \u001B[1;32mas\u001B[0m \u001B[0merr\u001B[0m\u001B[1;33m:\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n\u001B[1;32m-> 3363\u001B[1;33m                 \u001B[1;32mraise\u001B[0m \u001B[0mKeyError\u001B[0m\u001B[1;33m(\u001B[0m\u001B[0mkey\u001B[0m\u001B[1;33m)\u001B[0m \u001B[1;32mfrom\u001B[0m \u001B[0merr\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n\u001B[0m\u001B[0;32m   3364\u001B[0m \u001B[1;33m\u001B[0m\u001B[0m\n\u001B[0;32m   3365\u001B[0m         \u001B[1;32mif\u001B[0m \u001B[0mis_scalar\u001B[0m\u001B[1;33m(\u001B[0m\u001B[0mkey\u001B[0m\u001B[1;33m)\u001B[0m \u001B[1;32mand\u001B[0m \u001B[0misna\u001B[0m\u001B[1;33m(\u001B[0m\u001B[0mkey\u001B[0m\u001B[1;33m)\u001B[0m \u001B[1;32mand\u001B[0m \u001B[1;32mnot\u001B[0m \u001B[0mself\u001B[0m\u001B[1;33m.\u001B[0m\u001B[0mhasnans\u001B[0m\u001B[1;33m:\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n",
++      "\u001B[1;31mKeyError\u001B[0m: 'calculated_minima'"
++     ]
++    }
++   ],
++   "source": [
++    "plt.hist(df['calculated_minima'], bins=5, align='right', color='purple', edgecolor='black')"
++   ]
++  },
++  {
++   "cell_type": "code",
++   "execution_count": 68,
++   "metadata": {},
++   "outputs": [],
++   "source": [
++    "# fig, ax = plt.subplots(figsize=(15,15))\n",
++    "# df.groupby('weather1').plot(x='rownum', y='calculated_minima', ax=ax, legend=True)\n",
++    "df2 = df[df['weather1'] == 'cat_1']\n",
++    "df2 = df2.sort_values('calculated_minima').reset_index()"
++   ]
++  },
++  {
++   "cell_type": "code",
++   "execution_count": 66,
++   "metadata": {},
++   "outputs": [
++    {
++     "data": {
++      "text/html": [
++       "<div>\n",
++       "<style scoped>\n",
++       "    .dataframe tbody tr th:only-of-type {\n",
++       "        vertical-align: middle;\n",
++       "    }\n",
++       "\n",
++       "    .dataframe tbody tr th {\n",
++       "        vertical-align: top;\n",
++       "    }\n",
++       "\n",
++       "    .dataframe thead th {\n",
++       "        text-align: right;\n",
++       "    }\n",
++       "</style>\n",
++       "<table border=\"1\" class=\"dataframe\">\n",
++       "  <thead>\n",
++       "    <tr style=\"text-align: right;\">\n",
++       "      <th></th>\n",
++       "      <th>rownum</th>\n",
++       "      <th>weather1</th>\n",
++       "      <th>weather2</th>\n",
++       "      <th>wind1</th>\n",
++       "      <th>wind2</th>\n",
++       "      <th>aircraft_weight_class1</th>\n",
++       "      <th>aircraft_weight_class2</th>\n",
++       "      <th>ground_traffic1</th>\n",
++       "      <th>ground_traffic2</th>\n",
++       "      <th>air_traffic_congestion1</th>\n",
++       "      <th>air_traffic_congestion2</th>\n",
++       "      <th>calculated_minima</th>\n",
++       "    </tr>\n",
++       "  </thead>\n",
++       "  <tbody>\n",
++       "    <tr>\n",
++       "      <th>876</th>\n",
++       "      <td>877</td>\n",
++       "      <td>cat_1</td>\n",
++       "      <td>cat_1</td>\n",
++       "      <td>headwind</td>\n",
++       "      <td>headwind</td>\n",
++       "      <td>medium</td>\n",
++       "      <td>super</td>\n",
++       "      <td>high</td>\n",
++       "      <td>high</td>\n",
++       "      <td>max</td>\n",
++       "      <td>max</td>\n",
++       "      <td>3.0</td>\n",
++       "    </tr>\n",
++       "    <tr>\n",
++       "      <th>801</th>\n",
++       "      <td>802</td>\n",
++       "      <td>cat_1</td>\n",
++       "      <td>cat_1</td>\n",
++       "      <td>headwind</td>\n",
++       "      <td>headwind</td>\n",
++       "      <td>medium</td>\n",
++       "      <td>super</td>\n",
++       "      <td>average</td>\n",
++       "      <td>average</td>\n",
++       "      <td>regular</td>\n",
++       "      <td>regular</td>\n",
++       "      <td>3.0</td>\n",
++       "    </tr>\n",
++       "    <tr>\n",
++       "      <th>887</th>\n",
++       "      <td>888</td>\n",
++       "      <td>cat_1</td>\n",
++       "      <td>cat_1</td>\n",
++       "      <td>crosswind</td>\n",
++       "      <td>crosswind</td>\n",
++       "      <td>medium</td>\n",
++       "      <td>super</td>\n",
++       "      <td>high</td>\n",
++       "      <td>high</td>\n",
++       "      <td>max</td>\n",
++       "      <td>max</td>\n",
++       "      <td>3.0</td>\n",
++       "    </tr>\n",
++       "    <tr>\n",
++       "      <th>883</th>\n",
++       "      <td>884</td>\n",
++       "      <td>cat_1</td>\n",
++       "      <td>cat_1</td>\n",
++       "      <td>crosswind</td>\n",
++       "      <td>crosswind</td>\n",
++       "      <td>light</td>\n",
++       "      <td>heavy</td>\n",
++       "      <td>high</td>\n",
++       "      <td>high</td>\n",
++       "      <td>max</td>\n",
++       "      <td>max</td>\n",
++       "      <td>3.1</td>\n",
++       "    </tr>\n",
++       "    <tr>\n",
++       "      <th>810</th>\n",
++       "      <td>811</td>\n",
++       "      <td>cat_1</td>\n",
++       "      <td>cat_1</td>\n",
++       "      <td>headwind</td>\n",
++       "      <td>headwind</td>\n",
++       "      <td>light</td>\n",
++       "      <td>heavy</td>\n",
++       "      <td>average</td>\n",
++       "      <td>average</td>\n",
++       "      <td>regular</td>\n",
++       "      <td>regular</td>\n",
++       "      <td>3.1</td>\n",
++       "    </tr>\n",
++       "    <tr>\n",
++       "      <th>...</th>\n",
++       "      <td>...</td>\n",
++       "      <td>...</td>\n",
++       "      <td>...</td>\n",
++       "      <td>...</td>\n",
++       "      <td>...</td>\n",
++       "      <td>...</td>\n",
++       "      <td>...</td>\n",
++       "      <td>...</td>\n",
++       "      <td>...</td>\n",
++       "      <td>...</td>\n",
++       "      <td>...</td>\n",
++       "      <td>...</td>\n",
++       "    </tr>\n",
++       "    <tr>\n",
++       "      <th>819</th>\n",
++       "      <td>820</td>\n",
++       "      <td>cat_1</td>\n",
++       "      <td>cat_1</td>\n",
++       "      <td>headwind</td>\n",
++       "      <td>tailwind</td>\n",
++       "      <td>heavy</td>\n",
++       "      <td>light</td>\n",
++       "      <td>average</td>\n",
++       "      <td>high</td>\n",
++       "      <td>regular</td>\n",
++       "      <td>max</td>\n",
++       "      <td>6.5</td>\n",
++       "    </tr>\n",
++       "    <tr>\n",
++       "      <th>860</th>\n",
++       "      <td>861</td>\n",
++       "      <td>cat_1</td>\n",
++       "      <td>cat_1</td>\n",
++       "      <td>tailwind</td>\n",
++       "      <td>tailwind</td>\n",
++       "      <td>super</td>\n",
++       "      <td>heavy</td>\n",
++       "      <td>high</td>\n",
++       "      <td>high</td>\n",
++       "      <td>max</td>\n",
++       "      <td>max</td>\n",
++       "      <td>6.5</td>\n",
++       "    </tr>\n",
++       "    <tr>\n",
++       "      <th>809</th>\n",
++       "      <td>810</td>\n",
++       "      <td>cat_1</td>\n",
++       "      <td>cat_1</td>\n",
++       "      <td>headwind</td>\n",
++       "      <td>headwind</td>\n",
++       "      <td>heavy</td>\n",
++       "      <td>light</td>\n",
++       "      <td>average</td>\n",
++       "      <td>average</td>\n",
++       "      <td>regular</td>\n",
++       "      <td>regular</td>\n",
++       "      <td>6.5</td>\n",
++       "    </tr>\n",
++       "    <tr>\n",
++       "      <th>877</th>\n",
++       "      <td>878</td>\n",
++       "      <td>cat_1</td>\n",
++       "      <td>cat_1</td>\n",
++       "      <td>headwind</td>\n",
++       "      <td>headwind</td>\n",
++       "      <td>super</td>\n",
++       "      <td>medium</td>\n",
++       "      <td>high</td>\n",
++       "      <td>high</td>\n",
++       "      <td>max</td>\n",
++       "      <td>max</td>\n",
++       "      <td>7.0</td>\n",
++       "    </tr>\n",
++       "    <tr>\n",
++       "      <th>802</th>\n",
++       "      <td>803</td>\n",
++       "      <td>cat_1</td>\n",
++       "      <td>cat_1</td>\n",
++       "      <td>headwind</td>\n",
++       "      <td>headwind</td>\n",
++       "      <td>super</td>\n",
++       "      <td>medium</td>\n",
++       "      <td>average</td>\n",
++       "      <td>average</td>\n",
++       "      <td>regular</td>\n",
++       "      <td>regular</td>\n",
++       "      <td>7.0</td>\n",
++       "    </tr>\n",
++       "  </tbody>\n",
++       "</table>\n",
++       "<p>100 rows × 12 columns</p>\n",
++       "</div>"
++      ],
++      "text/plain": [
++       "     rownum weather1 weather2      wind1      wind2 aircraft_weight_class1  \\\n",
++       "876     877    cat_1    cat_1   headwind   headwind                 medium   \n",
++       "801     802    cat_1    cat_1   headwind   headwind                 medium   \n",
++       "887     888    cat_1    cat_1  crosswind  crosswind                 medium   \n",
++       "883     884    cat_1    cat_1  crosswind  crosswind                  light   \n",
++       "810     811    cat_1    cat_1   headwind   headwind                  light   \n",
++       "..      ...      ...      ...        ...        ...                    ...   \n",
++       "819     820    cat_1    cat_1   headwind   tailwind                  heavy   \n",
++       "860     861    cat_1    cat_1   tailwind   tailwind                  super   \n",
++       "809     810    cat_1    cat_1   headwind   headwind                  heavy   \n",
++       "877     878    cat_1    cat_1   headwind   headwind                  super   \n",
++       "802     803    cat_1    cat_1   headwind   headwind                  super   \n",
++       "\n",
++       "    aircraft_weight_class2 ground_traffic1 ground_traffic2  \\\n",
++       "876                  super            high            high   \n",
++       "801                  super         average         average   \n",
++       "887                  super            high            high   \n",
++       "883                  heavy            high            high   \n",
++       "810                  heavy         average         average   \n",
++       "..                     ...             ...             ...   \n",
++       "819                  light         average            high   \n",
++       "860                  heavy            high            high   \n",
++       "809                  light         average         average   \n",
++       "877                 medium            high            high   \n",
++       "802                 medium         average         average   \n",
++       "\n",
++       "    air_traffic_congestion1 air_traffic_congestion2  calculated_minima  \n",
++       "876                     max                     max                3.0  \n",
++       "801                 regular                 regular                3.0  \n",
++       "887                     max                     max                3.0  \n",
++       "883                     max                     max                3.1  \n",
++       "810                 regular                 regular                3.1  \n",
++       "..                      ...                     ...                ...  \n",
++       "819                 regular                     max                6.5  \n",
++       "860                     max                     max                6.5  \n",
++       "809                 regular                 regular                6.5  \n",
++       "877                     max                     max                7.0  \n",
++       "802                 regular                 regular                7.0  \n",
++       "\n",
++       "[100 rows x 12 columns]"
++      ]
++     },
++     "execution_count": 66,
++     "metadata": {},
++     "output_type": "execute_result"
++    }
++   ],
++   "source": [
++    "df2"
++   ]
++  },
++  {
++   "cell_type": "code",
++   "execution_count": 121,
++   "metadata": {},
++   "outputs": [
++    {
++     "ename": "KeyError",
++     "evalue": "\"None of [Index(['cat_1', 'cat_2', 'cat_3'], dtype='object', name='weather1')] are in the [columns]\"",
++     "output_type": "error",
++     "traceback": [
++      "\u001B[1;31m---------------------------------------------------------------------------\u001B[0m",
++      "\u001B[1;31mKeyError\u001B[0m                                  Traceback (most recent call last)",
++      "\u001B[1;32m~\\AppData\\Local\\Temp/ipykernel_26604/1656538707.py\u001B[0m in \u001B[0;36m<module>\u001B[1;34m\u001B[0m\n\u001B[0;32m      3\u001B[0m \u001B[1;31m# plt.show()\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n\u001B[0;32m      4\u001B[0m \u001B[1;33m\u001B[0m\u001B[0m\n\u001B[1;32m----> 5\u001B[1;33m \u001B[0mdf2\u001B[0m\u001B[1;33m.\u001B[0m\u001B[0mplot\u001B[0m\u001B[1;33m(\u001B[0m\u001B[0mx\u001B[0m\u001B[1;33m=\u001B[0m\u001B[0mdf\u001B[0m\u001B[1;33m.\u001B[0m\u001B[0mindex\u001B[0m\u001B[1;33m,\u001B[0m \u001B[0my\u001B[0m\u001B[1;33m=\u001B[0m\u001B[1;34m'calculated_minima'\u001B[0m\u001B[1;33m)\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n\u001B[0m",
++      "\u001B[1;32m~\\anaconda3\\lib\\site-packages\\pandas\\plotting\\_core.py\u001B[0m in \u001B[0;36m__call__\u001B[1;34m(self, *args, **kwargs)\u001B[0m\n\u001B[0;32m    935\u001B[0m                 \u001B[1;32mif\u001B[0m \u001B[0mis_integer\u001B[0m\u001B[1;33m(\u001B[0m\u001B[0mx\u001B[0m\u001B[1;33m)\u001B[0m \u001B[1;32mand\u001B[0m \u001B[1;32mnot\u001B[0m \u001B[0mdata\u001B[0m\u001B[1;33m.\u001B[0m\u001B[0mcolumns\u001B[0m\u001B[1;33m.\u001B[0m\u001B[0mholds_integer\u001B[0m\u001B[1;33m(\u001B[0m\u001B[1;33m)\u001B[0m\u001B[1;33m:\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n\u001B[0;32m    936\u001B[0m                     \u001B[0mx\u001B[0m \u001B[1;33m=\u001B[0m \u001B[0mdata_cols\u001B[0m\u001B[1;33m[\u001B[0m\u001B[0mx\u001B[0m\u001B[1;33m]\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n\u001B[1;32m--> 937\u001B[1;33m                 \u001B[1;32melif\u001B[0m \u001B[1;32mnot\u001B[0m \u001B[0misinstance\u001B[0m\u001B[1;33m(\u001B[0m\u001B[0mdata\u001B[0m\u001B[1;33m[\u001B[0m\u001B[0mx\u001B[0m\u001B[1;33m]\u001B[0m\u001B[1;33m,\u001B[0m \u001B[0mABCSeries\u001B[0m\u001B[1;33m)\u001B[0m\u001B[1;33m:\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n\u001B[0m\u001B[0;32m    938\u001B[0m                     \u001B[1;32mraise\u001B[0m \u001B[0mValueError\u001B[0m\u001B[1;33m(\u001B[0m\u001B[1;34m\"x must be a label or position\"\u001B[0m\u001B[1;33m)\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n\u001B[0;32m    939\u001B[0m                 \u001B[0mdata\u001B[0m \u001B[1;33m=\u001B[0m \u001B[0mdata\u001B[0m\u001B[1;33m.\u001B[0m\u001B[0mset_index\u001B[0m\u001B[1;33m(\u001B[0m\u001B[0mx\u001B[0m\u001B[1;33m)\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n",
++      "\u001B[1;32m~\\anaconda3\\lib\\site-packages\\pandas\\core\\frame.py\u001B[0m in \u001B[0;36m__getitem__\u001B[1;34m(self, key)\u001B[0m\n\u001B[0;32m   3462\u001B[0m             \u001B[1;32mif\u001B[0m \u001B[0mis_iterator\u001B[0m\u001B[1;33m(\u001B[0m\u001B[0mkey\u001B[0m\u001B[1;33m)\u001B[0m\u001B[1;33m:\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n\u001B[0;32m   3463\u001B[0m                 \u001B[0mkey\u001B[0m \u001B[1;33m=\u001B[0m \u001B[0mlist\u001B[0m\u001B[1;33m(\u001B[0m\u001B[0mkey\u001B[0m\u001B[1;33m)\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n\u001B[1;32m-> 3464\u001B[1;33m             \u001B[0mindexer\u001B[0m \u001B[1;33m=\u001B[0m \u001B[0mself\u001B[0m\u001B[1;33m.\u001B[0m\u001B[0mloc\u001B[0m\u001B[1;33m.\u001B[0m\u001B[0m_get_listlike_indexer\u001B[0m\u001B[1;33m(\u001B[0m\u001B[0mkey\u001B[0m\u001B[1;33m,\u001B[0m \u001B[0maxis\u001B[0m\u001B[1;33m=\u001B[0m\u001B[1;36m1\u001B[0m\u001B[1;33m)\u001B[0m\u001B[1;33m[\u001B[0m\u001B[1;36m1\u001B[0m\u001B[1;33m]\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n\u001B[0m\u001B[0;32m   3465\u001B[0m \u001B[1;33m\u001B[0m\u001B[0m\n\u001B[0;32m   3466\u001B[0m         \u001B[1;31m# take() does not accept boolean indexers\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n",
++      "\u001B[1;32m~\\anaconda3\\lib\\site-packages\\pandas\\core\\indexing.py\u001B[0m in \u001B[0;36m_get_listlike_indexer\u001B[1;34m(self, key, axis)\u001B[0m\n\u001B[0;32m   1312\u001B[0m             \u001B[0mkeyarr\u001B[0m\u001B[1;33m,\u001B[0m \u001B[0mindexer\u001B[0m\u001B[1;33m,\u001B[0m \u001B[0mnew_indexer\u001B[0m \u001B[1;33m=\u001B[0m \u001B[0max\u001B[0m\u001B[1;33m.\u001B[0m\u001B[0m_reindex_non_unique\u001B[0m\u001B[1;33m(\u001B[0m\u001B[0mkeyarr\u001B[0m\u001B[1;33m)\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n\u001B[0;32m   1313\u001B[0m \u001B[1;33m\u001B[0m\u001B[0m\n\u001B[1;32m-> 1314\u001B[1;33m         \u001B[0mself\u001B[0m\u001B[1;33m.\u001B[0m\u001B[0m_validate_read_indexer\u001B[0m\u001B[1;33m(\u001B[0m\u001B[0mkeyarr\u001B[0m\u001B[1;33m,\u001B[0m \u001B[0mindexer\u001B[0m\u001B[1;33m,\u001B[0m \u001B[0maxis\u001B[0m\u001B[1;33m)\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n\u001B[0m\u001B[0;32m   1315\u001B[0m \u001B[1;33m\u001B[0m\u001B[0m\n\u001B[0;32m   1316\u001B[0m         if needs_i8_conversion(ax.dtype) or isinstance(\n",
++      "\u001B[1;32m~\\anaconda3\\lib\\site-packages\\pandas\\core\\indexing.py\u001B[0m in \u001B[0;36m_validate_read_indexer\u001B[1;34m(self, key, indexer, axis)\u001B[0m\n\u001B[0;32m   1372\u001B[0m                 \u001B[1;32mif\u001B[0m \u001B[0muse_interval_msg\u001B[0m\u001B[1;33m:\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n\u001B[0;32m   1373\u001B[0m                     \u001B[0mkey\u001B[0m \u001B[1;33m=\u001B[0m \u001B[0mlist\u001B[0m\u001B[1;33m(\u001B[0m\u001B[0mkey\u001B[0m\u001B[1;33m)\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n\u001B[1;32m-> 1374\u001B[1;33m                 \u001B[1;32mraise\u001B[0m \u001B[0mKeyError\u001B[0m\u001B[1;33m(\u001B[0m\u001B[1;34mf\"None of [{key}] are in the [{axis_name}]\"\u001B[0m\u001B[1;33m)\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n\u001B[0m\u001B[0;32m   1375\u001B[0m \u001B[1;33m\u001B[0m\u001B[0m\n\u001B[0;32m   1376\u001B[0m             \u001B[0mnot_found\u001B[0m \u001B[1;33m=\u001B[0m \u001B[0mlist\u001B[0m\u001B[1;33m(\u001B[0m\u001B[0mensure_index\u001B[0m\u001B[1;33m(\u001B[0m\u001B[0mkey\u001B[0m\u001B[1;33m)\u001B[0m\u001B[1;33m[\u001B[0m\u001B[0mmissing_mask\u001B[0m\u001B[1;33m.\u001B[0m\u001B[0mnonzero\u001B[0m\u001B[1;33m(\u001B[0m\u001B[1;33m)\u001B[0m\u001B[1;33m[\u001B[0m\u001B[1;36m0\u001B[0m\u001B[1;33m]\u001B[0m\u001B[1;33m]\u001B[0m\u001B[1;33m.\u001B[0m\u001B[0munique\u001B[0m\u001B[1;33m(\u001B[0m\u001B[1;33m)\u001B[0m\u001B[1;33m)\u001B[0m\u001B[1;33m\u001B[0m\u001B[1;33m\u001B[0m\u001B[0m\n",
++      "\u001B[1;31mKeyError\u001B[0m: \"None of [Index(['cat_1', 'cat_2', 'cat_3'], dtype='object', name='weather1')] are in the [columns]\""
++     ]
++    }
++   ],
++   "source": [
++    "# sns.set(rc = {'figure.figsize':(15,8)})\n",
++    "# sns.lineplot(data = df, x = 'rownum', y = 'calculated_minima')\n",
++    "# plt.show()\n",
++    "\n",
++    "df2.plot(x=df.index, y='calculated_minima')"
++   ]
+   },
+   {
+    "cell_type": "code",
+    "execution_count": null,
++   "metadata": {},
+    "outputs": [],
+-   "source": [],
+-   "metadata": {
+-    "collapsed": false,
+-    "pycharm": {
+-     "name": "#%%\n"
+-    }
+-   }
++   "source": []
+   }
+  ],
+  "metadata": {
+   "kernelspec": {
+-   "display_name": "Python 3",
++   "display_name": "Python 3 (ipykernel)",
+    "language": "python",
+    "name": "python3"
+   },
+   "language_info": {
+    "codemirror_mode": {
+     "name": "ipython",
+-    "version": 2
++    "version": 3
+    },
+    "file_extension": ".py",
+    "mimetype": "text/x-python",
+    "name": "python",
+    "nbconvert_exporter": "python",
+-   "pygments_lexer": "ipython2",
+-   "version": "2.7.6"
++   "pygments_lexer": "ipython3",
++   "version": "3.9.7"
+   }
+  },
+  "nbformat": 4,
+- "nbformat_minor": 0
++ "nbformat_minor": 1
+ }
+\ No newline at end of file
+Index: .idea/workspace.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project version=\"4\">\r\n  <component name=\"ChangeListManager\">\r\n    <list default=\"true\" id=\"8eebcd49-ca73-46d5-8049-c8229703b3b6\" name=\"Changes\" comment=\"Added doctest and code for csv export\">\r\n      <change afterPath=\"$PROJECT_DIR$/Hypothesis_1.ipynb\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/.idea/workspace.xml\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/.idea/workspace.xml\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/hyp1.csv\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/hyp1.csv\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/hyp2.csv\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/hyp2.csv\" afterDir=\"false\" />\r\n    </list>\r\n    <option name=\"SHOW_DIALOG\" value=\"false\" />\r\n    <option name=\"HIGHLIGHT_CONFLICTS\" value=\"true\" />\r\n    <option name=\"HIGHLIGHT_NON_ACTIVE_CHANGELIST\" value=\"false\" />\r\n    <option name=\"LAST_RESOLUTION\" value=\"IGNORE\" />\r\n  </component>\r\n  <component name=\"FileTemplateManagerImpl\">\r\n    <option name=\"RECENT_TEMPLATES\">\r\n      <list>\r\n        <option value=\"Jupyter Notebook\" />\r\n      </list>\r\n    </option>\r\n  </component>\r\n  <component name=\"Git.Settings\">\r\n    <option name=\"RECENT_GIT_ROOT_PATH\" value=\"$PROJECT_DIR$\" />\r\n  </component>\r\n  <component name=\"MarkdownSettingsMigration\">\r\n    <option name=\"stateVersion\" value=\"1\" />\r\n  </component>\r\n  <component name=\"ProjectId\" id=\"28KS9xAOh5TlODIlogEGNYf806C\" />\r\n  <component name=\"ProjectViewState\">\r\n    <option name=\"hideEmptyMiddlePackages\" value=\"true\" />\r\n    <option name=\"showLibraryContents\" value=\"true\" />\r\n  </component>\r\n  <component name=\"PropertiesComponent\">\r\n    <property name=\"RunOnceActivity.OpenProjectViewOnStart\" value=\"true\" />\r\n    <property name=\"RunOnceActivity.ShowReadmeOnStart\" value=\"true\" />\r\n    <property name=\"ToolWindowPython Packages.ShowToolbar\" value=\"false\" />\r\n    <property name=\"WebServerToolWindowFactoryState\" value=\"false\" />\r\n    <property name=\"settings.editor.selected.configurable\" value=\"advanced.settings\" />\r\n  </component>\r\n  <component name=\"RunManager\" selected=\"Python.2022Spring_Finals\">\r\n    <configuration name=\"2022Spring_Finals\" type=\"PythonConfigurationType\" factoryName=\"Python\" temporary=\"true\" nameIsGenerated=\"true\">\r\n      <option name=\"INTERPRETER_OPTIONS\" value=\"\" />\r\n      <option name=\"PARENT_ENVS\" value=\"true\" />\r\n      <envs>\r\n        <env name=\"PYTHONUNBUFFERED\" value=\"1\" />\r\n      </envs>\r\n      <option name=\"SDK_HOME\" value=\"C:\\Users\\ruchi\\anaconda3\\python.exe\" />\r\n      <option name=\"WORKING_DIRECTORY\" value=\"$PROJECT_DIR$\" />\r\n      <option name=\"IS_MODULE_SDK\" value=\"false\" />\r\n      <option name=\"ADD_CONTENT_ROOTS\" value=\"true\" />\r\n      <option name=\"ADD_SOURCE_ROOTS\" value=\"true\" />\r\n      <module name=\"\" />\r\n      <EXTENSION ID=\"PythonCoverageRunConfigurationExtension\" runner=\"coverage.py\" />\r\n      <option name=\"SCRIPT_NAME\" value=\"$PROJECT_DIR$/2022Spring_Finals.py\" />\r\n      <option name=\"PARAMETERS\" value=\"\" />\r\n      <option name=\"SHOW_COMMAND_LINE\" value=\"false\" />\r\n      <option name=\"EMULATE_TERMINAL\" value=\"false\" />\r\n      <option name=\"MODULE_MODE\" value=\"false\" />\r\n      <option name=\"REDIRECT_INPUT\" value=\"false\" />\r\n      <option name=\"INPUT_FILE\" value=\"\" />\r\n      <method v=\"2\" />\r\n    </configuration>\r\n    <configuration name=\"main\" type=\"PythonConfigurationType\" factoryName=\"Python\" nameIsGenerated=\"true\">\r\n      <option name=\"INTERPRETER_OPTIONS\" value=\"\" />\r\n      <option name=\"PARENT_ENVS\" value=\"true\" />\r\n      <envs>\r\n        <env name=\"PYTHONUNBUFFERED\" value=\"1\" />\r\n      </envs>\r\n      <option name=\"SDK_HOME\" value=\"\" />\r\n      <option name=\"WORKING_DIRECTORY\" value=\"$PROJECT_DIR$\" />\r\n      <option name=\"IS_MODULE_SDK\" value=\"false\" />\r\n      <option name=\"ADD_CONTENT_ROOTS\" value=\"true\" />\r\n      <option name=\"ADD_SOURCE_ROOTS\" value=\"true\" />\r\n      <module name=\"\" />\r\n      <EXTENSION ID=\"PythonCoverageRunConfigurationExtension\" runner=\"coverage.py\" />\r\n      <option name=\"SCRIPT_NAME\" value=\"$PROJECT_DIR$/main.py\" />\r\n      <option name=\"PARAMETERS\" value=\"\" />\r\n      <option name=\"SHOW_COMMAND_LINE\" value=\"false\" />\r\n      <option name=\"EMULATE_TERMINAL\" value=\"false\" />\r\n      <option name=\"MODULE_MODE\" value=\"false\" />\r\n      <option name=\"REDIRECT_INPUT\" value=\"false\" />\r\n      <option name=\"INPUT_FILE\" value=\"\" />\r\n      <method v=\"2\" />\r\n    </configuration>\r\n    <recent_temporary>\r\n      <list>\r\n        <item itemvalue=\"Python.2022Spring_Finals\" />\r\n      </list>\r\n    </recent_temporary>\r\n  </component>\r\n  <component name=\"SpellCheckerSettings\" RuntimeDictionaries=\"0\" Folders=\"0\" CustomDictionaries=\"0\" DefaultDictionary=\"application-level\" UseSingleDictionary=\"true\" transferred=\"true\" />\r\n  <component name=\"TaskManager\">\r\n    <task active=\"true\" id=\"Default\" summary=\"Default task\">\r\n      <changelist id=\"8eebcd49-ca73-46d5-8049-c8229703b3b6\" name=\"Changes\" comment=\"\" />\r\n      <created>1650963637131</created>\r\n      <option name=\"number\" value=\"Default\" />\r\n      <option name=\"presentableId\" value=\"Default\" />\r\n      <updated>1650963637131</updated>\r\n      <workItem from=\"1650963638919\" duration=\"16000\" />\r\n      <workItem from=\"1650963675961\" duration=\"33000\" />\r\n      <workItem from=\"1650963734335\" duration=\"80000\" />\r\n      <workItem from=\"1651010304088\" duration=\"185000\" />\r\n      <workItem from=\"1651021139785\" duration=\"591000\" />\r\n      <workItem from=\"1651909373909\" duration=\"179000\" />\r\n      <workItem from=\"1651952647732\" duration=\"7475000\" />\r\n    </task>\r\n    <task id=\"LOCAL-00001\" summary=\"Initial commit for airplane attributes\">\r\n      <created>1650963780835</created>\r\n      <option name=\"number\" value=\"00001\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00001\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1650963780835</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00002\" summary=\"Added functions for distance calculations\">\r\n      <created>1651021594040</created>\r\n      <option name=\"number\" value=\"00002\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00002\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1651021594040</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00003\" summary=\"Added doctests\">\r\n      <created>1651909402066</created>\r\n      <option name=\"number\" value=\"00003\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00003\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1651909402066</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00004\" summary=\"Added doctest and code for csv export\">\r\n      <created>1651960456816</created>\r\n      <option name=\"number\" value=\"00004\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00004\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1651960456816</updated>\r\n    </task>\r\n    <option name=\"localTasksCounter\" value=\"5\" />\r\n    <servers />\r\n  </component>\r\n  <component name=\"TypeScriptGeneratedFilesManager\">\r\n    <option name=\"version\" value=\"3\" />\r\n  </component>\r\n  <component name=\"Vcs.Log.Tabs.Properties\">\r\n    <option name=\"TAB_STATES\">\r\n      <map>\r\n        <entry key=\"MAIN\">\r\n          <value>\r\n            <State />\r\n          </value>\r\n        </entry>\r\n      </map>\r\n    </option>\r\n  </component>\r\n  <component name=\"VcsManagerConfiguration\">\r\n    <MESSAGE value=\"Initial commit for airplane attributes\" />\r\n    <MESSAGE value=\"Added functions for distance calculations\" />\r\n    <MESSAGE value=\"Added doctests\" />\r\n    <MESSAGE value=\"Added doctest and code for csv export\" />\r\n    <option name=\"LAST_COMMIT_MESSAGE\" value=\"Added doctest and code for csv export\" />\r\n  </component>\r\n  <component name=\"XDebuggerManager\">\r\n    <breakpoint-manager>\r\n      <breakpoints>\r\n        <line-breakpoint enabled=\"true\" suspend=\"THREAD\" type=\"python-line\">\r\n          <url>file://$PROJECT_DIR$/main.py</url>\r\n          <line>9</line>\r\n          <option name=\"timeStamp\" value=\"1\" />\r\n        </line-breakpoint>\r\n      </breakpoints>\r\n    </breakpoint-manager>\r\n  </component>\r\n  <component name=\"com.intellij.coverage.CoverageDataManagerImpl\">\r\n    <SUITE FILE_PATH=\"coverage/SpringFinalProject2$2022Spring_Finals.coverage\" NAME=\"2022Spring_Finals Coverage Results\" MODIFIED=\"1651961434538\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"true\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$\" />\r\n  </component>\r\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/workspace.xml b/.idea/workspace.xml
+--- a/.idea/workspace.xml	(revision 2f46009e8fb56ffaa853ca9114f821f766361a58)
++++ b/.idea/workspace.xml	(date 1652038338261)
+@@ -1,11 +1,10 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <project version="4">
+   <component name="ChangeListManager">
+-    <list default="true" id="8eebcd49-ca73-46d5-8049-c8229703b3b6" name="Changes" comment="Added doctest and code for csv export">
+-      <change afterPath="$PROJECT_DIR$/Hypothesis_1.ipynb" afterDir="false" />
++    <list default="true" id="8eebcd49-ca73-46d5-8049-c8229703b3b6" name="Changes" comment="adding jupyter notebook and data">
+       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/hyp1.csv" beforeDir="false" afterPath="$PROJECT_DIR$/hyp1.csv" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/hyp2.csv" beforeDir="false" afterPath="$PROJECT_DIR$/hyp2.csv" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/2022Spring_Finals.py" beforeDir="false" afterPath="$PROJECT_DIR$/2022Spring_Finals.py" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/Hypothesis_1.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/Hypothesis_1.ipynb" afterDir="false" />
+     </list>
+     <option name="SHOW_DIALOG" value="false" />
+     <option name="HIGHLIGHT_CONFLICTS" value="true" />
+@@ -103,6 +102,7 @@
+       <workItem from="1651021139785" duration="591000" />
+       <workItem from="1651909373909" duration="179000" />
+       <workItem from="1651952647732" duration="7475000" />
++      <workItem from="1651961556681" duration="5035000" />
+     </task>
+     <task id="LOCAL-00001" summary="Initial commit for airplane attributes">
+       <created>1650963780835</created>
+@@ -132,7 +132,14 @@
+       <option name="project" value="LOCAL" />
+       <updated>1651960456816</updated>
+     </task>
+-    <option name="localTasksCounter" value="5" />
++    <task id="LOCAL-00005" summary="adding jupyter notebook and data">
++      <created>1651961600654</created>
++      <option name="number" value="00005" />
++      <option name="presentableId" value="LOCAL-00005" />
++      <option name="project" value="LOCAL" />
++      <updated>1651961600654</updated>
++    </task>
++    <option name="localTasksCounter" value="6" />
+     <servers />
+   </component>
+   <component name="TypeScriptGeneratedFilesManager">
+@@ -154,7 +161,8 @@
+     <MESSAGE value="Added functions for distance calculations" />
+     <MESSAGE value="Added doctests" />
+     <MESSAGE value="Added doctest and code for csv export" />
+-    <option name="LAST_COMMIT_MESSAGE" value="Added doctest and code for csv export" />
++    <MESSAGE value="adding jupyter notebook and data" />
++    <option name="LAST_COMMIT_MESSAGE" value="adding jupyter notebook and data" />
+   </component>
+   <component name="XDebuggerManager">
+     <breakpoint-manager>
+@@ -164,10 +172,15 @@
+           <line>9</line>
+           <option name="timeStamp" value="1" />
+         </line-breakpoint>
++        <line-breakpoint enabled="true" suspend="THREAD" type="jupyter-line">
++          <url>notebook://C:/Users/ruchi/PycharmProjects/SpringFinalProject2/Hypothesis_1.ipynb</url>
++          <line>1</line>
++          <option name="timeStamp" value="2" />
++        </line-breakpoint>
+       </breakpoints>
+     </breakpoint-manager>
+   </component>
+   <component name="com.intellij.coverage.CoverageDataManagerImpl">
+-    <SUITE FILE_PATH="coverage/SpringFinalProject2$2022Spring_Finals.coverage" NAME="2022Spring_Finals Coverage Results" MODIFIED="1651961434538" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
++    <SUITE FILE_PATH="coverage/SpringFinalProject2$2022Spring_Finals.coverage" NAME="2022Spring_Finals Coverage Results" MODIFIED="1651977347639" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+   </component>
+ </project>
+\ No newline at end of file
